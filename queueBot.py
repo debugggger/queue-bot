@@ -1,5 +1,6 @@
 import telebot
 from telebot import types
+import time
 
 with open('token.txt') as file:
     lines = [line.rstrip() for line in file]
@@ -24,12 +25,20 @@ def callback_message(callback):
     if callback.data == "com_member":
         bot.send_message(callback.message.chat.id, "добавление в БД")
     if callback.data == "com_create":
-        bot.send_message(callback.message.chat.id, "создание очереди")
+        msg = bot.send_message(callback.message.chat.id, "создание очереди")
+        time.sleep(2)
+        bot.edit_message_text("опять очередь аааааа", callback.message.chat.id, msg.message_id)
 
     if callback.data == "possibility":
         bot.send_message(callback.message.chat.id, "когда-нибудь мы это напишем")
     if callback.data == "commands":
         commandsList(callback.message)
+
+@bot.message_handler(content_types=['left_chat_member'])
+def handle_left_chat_member(message):
+    user_id = message.left_chat_member.id
+    chat_id = message.chat.id
+    bot.send_message(chat_id, f"Пользователь с ID {user_id} покинул чат.")
 
 def commandsList(message):
     markup = types.InlineKeyboardMarkup()
