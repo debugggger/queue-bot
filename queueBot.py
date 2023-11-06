@@ -3,11 +3,13 @@ from telebot import types
 import time
 from dotenv import load_dotenv
 import os
-import psycopg2
+from db import BotDB
 
+# TODO: add another ways to handle commandsList
 
 load_dotenv()
 bot = telebot.TeleBot(os.getenv('TOKEN'))
+BotDB = BotDB()
 
 
 @bot.message_handler(commands=['start'])
@@ -29,7 +31,8 @@ def start_message(message):
 @bot.callback_query_handler(func=lambda callback: True)
 def callback_message(callback):
     if callback.data == "com_member":
-        bot.send_message(callback.message.chat.id, "добавление в БД")
+        pass
+
     if callback.data == "com_create":
         msg = bot.send_message(callback.message.chat.id, "создание очереди")
         time.sleep(2)
@@ -39,6 +42,12 @@ def callback_message(callback):
         bot.send_message(callback.message.chat.id, "когда-нибудь мы это напишем")
     if callback.data == "commands":
         commandsList(callback.message)
+
+
+@bot.message_handler(commands=['member'])
+def handle_add_user(message):
+    bot.reply_to(message, 'добавление в БД')
+    BotDB.add_member(message.from_user.username, message.from_user.id)
 
 
 @bot.message_handler(content_types=['left_chat_member'])
