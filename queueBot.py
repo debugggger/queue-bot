@@ -1,11 +1,10 @@
 import telebot
 from telebot import types
 
-with open('token.txt') as file:
-    lines = [line.rstrip() for line in file]
-    token = lines[0]
+from bot import bot
 
-bot=telebot.TeleBot(token)
+import parser_subject
+parser_subject.init_subject(bot)
 
 setNameList = []
 sendedMemberList = []
@@ -13,6 +12,8 @@ createQueueList = []
 
 @bot.message_handler(func=lambda message: not message.text.startswith('/'))
 def handle_text(message):
+    parser_subject.text_handler_subject(message)
+
     if message.from_user.id in setNameList:
         name = message.text
         bot.send_message(message.chat.id, "@" + message.from_user.username + " твое отоброжаемое имя " + name)
