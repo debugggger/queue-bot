@@ -8,8 +8,9 @@ with open('token.txt') as file:
 bot=telebot.TeleBot(token)
 
 setNameList = []
-sendedMemberList = []
 createQueueList = []
+
+sendedMemberList = []
 
 @bot.message_handler(func=lambda message: not message.text.startswith('/'))
 def handle_text(message):
@@ -42,18 +43,20 @@ def create_message(message):
 def member_message(message):
     memberCommand(message)
 
-
+subjList = ["предмет 1", "предмет 2", "предмет 3"]
 
 @bot.callback_query_handler(func = lambda callback: True)
 def callback_message(callback):
     if callback.data == "help_member":
+        callback.message.from_user = callback.from_user
         memberCommand(callback.message)
-        # markup = types.InlineKeyboardMarkup()
-        # button1 = types.InlineKeyboardButton("Ввод", callback_data="member_add")
-        # button2 = types.InlineKeyboardButton("Отмена", callback_data="member_cancel")
-        # markup.row(button1, button2)
-        # bot.send_message(callback.message.chat.id, "Ты можешь ввести имя, которое будет отображаться при выводе очереди:",
-        #                   reply_markup=markup)
+
+    if "createNum_" in callback.data:
+        numStr = callback.data.strip("createNum_")
+        numSubj = int(numStr)
+        bot.send_message(callback.message.chat.id, "Создана очередь по предмету " + subjList[numSubj])
+
+
     if callback.data == "help_create":
         createCommand(callback.message)
     if callback.data == "possibility":
@@ -65,7 +68,16 @@ def callback_message(callback):
     if callback.data == "create_cancel":
         bot.delete_message(callback.message.chat.id, callback.message.id)
     if callback.data == "member_add":
-        setNameList.append(callback.message.from_user.id)
+        if callback.message.from_user.id != 6872610637:
+            if callback.message.from_user.id in sendedMemberList:
+                bot.send_message(callback.message.chat.id, "Введи имя. которое будет отображаться при выводе сообщений:")
+                setNameList.append(callback.message.from_user.id)
+                sendedMemberList.remove(callback.message.from_user.id)
+        else:
+            if callback.from_user.id in sendedMemberList:
+                bot.send_message(callback.message.chat.id, "Введи имя. которое будет отображаться при выводе сообщений:")
+                setNameList.append(callback.from_user.id)
+                sendedMemberList.remove(callback.from_user.id)
 
 def commandsList(message):
     markup = types.InlineKeyboardMarkup()
@@ -79,15 +91,20 @@ def memberCommand(message):
     button1 = types.InlineKeyboardButton("Ввод", callback_data="member_add")
     button2 = types.InlineKeyboardButton("Отмена", callback_data="member_cancel")
     markup.row(button1, button2)
-    bot.send_message(message.chat.id, "Ты можешь ввести имя, которое будет отображаться при выводе очереди:",
+    bot.send_message(message.chat.id, "Для продолжения нажми кнопку ввод",
                      reply_markup=markup)
+    sendedMemberList.append(message.from_user.id)
+
 
 def createCommand(message):
-    markup = types.InlineKeyboardMarkup()
-    # button1 = types.InlineKeyboardButton("Ввод", callback_data="member_add")
-    button2 = types.InlineKeyboardButton("Отмена", callback_data="create_cancel")
-    markup.row(button2)
-    bot.send_message(message.chat.id, "По какому предмету ты хочешь создать очередь?:", reply_markup=markup)
-    createQueueList.append(message.from_user.id)
+
+    markup = types.InlineKeyboardMarkup(row_width=3)
+    button0 = types.InlineKeyboardButton("Отмена", callback_data="create_cancel")
+    markup.row(button0)
+    for i in range(len(subjList)):
+        cur = types.InlineKeyboardButton(str(subjList[i]), callback_data="createNum_" + str(i))
+        markup.row(cur)
+
+    bot.send_message(message.chat.id, "По какому предмету ты хочешь создать очередь?", reply_markup=markup)
 
 bot.infinity_polling()
