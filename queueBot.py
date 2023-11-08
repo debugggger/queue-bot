@@ -39,6 +39,10 @@ def help_message(message):
 def create_message(message):
     createCommand(message)
 
+@bot.message_handler(commands=['delete'])
+def delete_message(message):
+    deleteCommand(message)
+
 @bot.message_handler(commands=['member'])
 def member_message(message):
     memberCommand(message)
@@ -56,17 +60,27 @@ def callback_message(callback):
         numSubj = int(numStr)
         bot.send_message(callback.message.chat.id, "Создана очередь по предмету " + subjList[numSubj])
 
+    if "deleteNum_" in callback.data:
+        numStr = callback.data.strip("deleteNum_")
+        numSubj = int(numStr)
+        bot.send_message(callback.message.chat.id, "Удалена очередь по предмету " + subjList[numSubj])
 
+    if callback.data == "help_delete":
+        deleteCommand(callback.message)
     if callback.data == "help_create":
         createCommand(callback.message)
     if callback.data == "possibility":
         bot.send_message(callback.message.chat.id, "когда-нибудь мы это напишем")
     if callback.data == "commands":
         commandsList(callback.message)
+
     if callback.data == "member_cancel":
         bot.delete_message(callback.message.chat.id, callback.message.id)
     if callback.data == "create_cancel":
         bot.delete_message(callback.message.chat.id, callback.message.id)
+    if callback.data == "delete_cancel":
+        bot.delete_message(callback.message.chat.id, callback.message.id)
+
     if callback.data == "member_add":
         if callback.message.from_user.id != 6872610637:
             if callback.message.from_user.id in sendedMemberList:
@@ -81,30 +95,38 @@ def callback_message(callback):
 
 def commandsList(message):
     markup = types.InlineKeyboardMarkup()
-    com1 = types.InlineKeyboardButton("/member", callback_data="help_member")
-    com2 = types.InlineKeyboardButton("/create", callback_data="help_create")
-    markup.row(com1, com2)
+    bt1 = types.InlineKeyboardButton("/member", callback_data="help_member")
+    bt2 = types.InlineKeyboardButton("/delete", callback_data="help_delete")
+    bt3 = types.InlineKeyboardButton("/create", callback_data="help_create")
+    markup.row(bt1, bt2, bt3)
     bot.send_message(message.chat.id, "можно воспользоваться следующими командами:", reply_markup=markup)
 
 def memberCommand(message):
     markup = types.InlineKeyboardMarkup()
-    button1 = types.InlineKeyboardButton("Ввод", callback_data="member_add")
-    button2 = types.InlineKeyboardButton("Отмена", callback_data="member_cancel")
-    markup.row(button1, button2)
+    bt1 = types.InlineKeyboardButton("Ввод", callback_data="member_add")
+    bt2 = types.InlineKeyboardButton("Отмена", callback_data="member_cancel")
+    markup.row(bt1, bt2)
     bot.send_message(message.chat.id, "Для продолжения нажми кнопку ввод",
                      reply_markup=markup)
     sendedMemberList.append(message.from_user.id)
 
 
 def createCommand(message):
-
     markup = types.InlineKeyboardMarkup(row_width=3)
-    button0 = types.InlineKeyboardButton("Отмена", callback_data="create_cancel")
-    markup.row(button0)
+    bt1 = types.InlineKeyboardButton("Отмена", callback_data="create_cancel")
+    markup.row(bt1)
     for i in range(len(subjList)):
-        cur = types.InlineKeyboardButton(str(subjList[i]), callback_data="createNum_" + str(i))
-        markup.row(cur)
-
+        btCur = types.InlineKeyboardButton(str(subjList[i]), callback_data="createNum_" + str(i))
+        markup.row(btCur)
     bot.send_message(message.chat.id, "По какому предмету ты хочешь создать очередь?", reply_markup=markup)
+
+def deleteCommand(message):
+    markup = types.InlineKeyboardMarkup(row_width=3)
+    bt1 = types.InlineKeyboardButton("Отмена", callback_data="delete_cancel")
+    markup.row(bt1)
+    for i in range(len(subjList)):
+        btCur = types.InlineKeyboardButton(str(subjList[i]), callback_data="deleteNum_" + str(i))
+        markup.row(btCur)
+    bot.send_message(message.chat.id, "По какому предмету ты хочешь удалить очередь?", reply_markup=markup)
 
 bot.infinity_polling()
