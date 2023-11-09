@@ -7,7 +7,17 @@ class ReqParser():
         self.sendedMemberList = []
         self.joinCertainList = []
         self.joinList = []
+        self.subjectUserList = []
+        self.removesubjectUserList = []
         self.subjList = ["предмет 1", "предмет 2", "предмет 3"]
+
+        self.c_callbackPrefixRemovesubject = 'removesubject_'
+
+    def textHandler(self, message):
+        self.removesubjectTextHandler(message)
+
+    def callback(self, callback):
+        self.removesubjectCallback(callback)
 
     def commandsList(self, message):
         markup = types.InlineKeyboardMarkup()
@@ -84,3 +94,29 @@ class ReqParser():
             btCur = types.InlineKeyboardButton(str(self.subjList[i]), callback_data="deleteNum_" + str(i))
             markup.row(btCur)
         self.bot.send_message(message.chat.id, "По какому предмету ты хочешь удалить очередь?", reply_markup=markup)
+
+    def subjectCommand(self, message):
+        self.bot.send_message(message.chat.id, 'Введите название нового предмета')
+        self.subjectUserList.append(message.from_user.id)
+
+    def removesubjectCommand(self, message):
+        buttons = []
+        for subject in self.subjList:
+            buttons.append([types.InlineKeyboardButton(subject, callback_data=self.c_callbackPrefixRemovesubject+subject)])
+        markup = types.InlineKeyboardMarkup(buttons)
+        self.bot.send_message(message.chat.id, 'Удалить предмет', reply_markup=markup)
+
+        self.removesubjectUserList.append(message.from_user.id)
+
+    def removesubjectTextHandler(self, message):
+        if message.from_user.id in self.subjectUserList:
+            self.bot.send_message(message.chat.id, 'Предмет ' + message.text + ' добавлен')
+            self.subjList.append(message.text)
+            self.subjectUserList.remove(message.from_user.id)
+
+    def removesubjectCallback(self, callback):
+        if callback.data.startswith(self.c_callbackPrefixRemovesubject) and callback.from_user.id in self.removesubjectUserList:
+            subject = callback.data.removeprefix(self.c_callbackPrefixRemovesubject)
+            self.bot.send_message(callback.message.chat.id, 'Предмет ' + subject + ' удален')
+            self.subjList.remove(subject)
+            self.removesubjectUserList.remove(callback.from_user.id)

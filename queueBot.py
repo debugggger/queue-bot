@@ -13,6 +13,8 @@ parser = ReqParser(bot)
 
 @bot.message_handler(func=lambda message: not message.text.startswith('/'))
 def handle_text(message):
+    parser.textHandler(message)
+
     if message.from_user.id in parser.setNameList:
         name = message.text
         bot.reply_to(message, "Отображаемое имя установлено")
@@ -21,6 +23,10 @@ def handle_text(message):
         num = message.text
         bot.reply_to(message, "Ты записан на место " + str(num))
         parser.joinCertainList.remove(message.from_user.id)
+    if message.from_user.id in parser.subjectUserList:
+        bot.send_message(message.chat.id, 'Предмет ' + message.text + ' добавлен')
+        parser.subjects.append(message.text)
+        parser.subjectUserList.remove(message.from_user.id)
 
 @bot.message_handler(commands=['start'])
 def start_message(message):
@@ -52,15 +58,25 @@ def show_message(message):
     parser.showCommand(message)
 
 @bot.message_handler(commands=['jointo'])
-def show_message(message):
+def jointo_message(message):
     parser.jointoCommand(message)
 
 @bot.message_handler(commands=['join'])
-def show_message(message):
+def join_message(message):
     parser.joinCommand(message)
+
+@bot.message_handler(commands=['subject'])
+def subject_message(message):
+    parser.subjectCommand(message)
+
+@bot.message_handler(commands=['removesubject'])
+def removesubject_message(message):
+    parser.removesubjectCommand(message)
 
 @bot.callback_query_handler(func = lambda callback: True)
 def callback_message(callback):
+    parser.callback(callback)
+
     if "createNum_" in callback.data:
         numStr = callback.data.strip("createNum_")
         numSubj = int(numStr)
