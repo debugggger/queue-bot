@@ -15,8 +15,12 @@ parser = ReqParser(bot)
 def handle_text(message):
     if message.from_user.id in parser.setNameList:
         name = message.text
-        bot.reply_to(message, "отображаемое имя установлено")
+        bot.reply_to(message, "Отображаемое имя установлено")
         parser.setNameList.remove(message.from_user.id)
+    if message.from_user.id in parser.joinCertainList:
+        num = message.text
+        bot.reply_to(message, "Ты записан на место " + str(num))
+        parser.joinCertainList.remove(message.from_user.id)
 
 @bot.message_handler(commands=['start'])
 def start_message(message):
@@ -47,6 +51,14 @@ def member_message(message):
 def show_message(message):
     parser.showCommand(message)
 
+@bot.message_handler(commands=['jointo'])
+def show_message(message):
+    parser.jointoCommand(message)
+
+@bot.message_handler(commands=['join'])
+def show_message(message):
+    parser.joinCommand(message)
+
 @bot.callback_query_handler(func = lambda callback: True)
 def callback_message(callback):
     if "createNum_" in callback.data:
@@ -64,6 +76,13 @@ def callback_message(callback):
         numSubj = int(numStr)
         bot.send_message(callback.message.chat.id, "Очередь по " + parser.subjList[numSubj] + ":\n")
 
+    elif "jointoNum_" in callback.data:
+        numStr = callback.data.strip("jointoNum_")
+        numSubj = int(numStr)
+        bot.send_message(callback.message.chat.id, "Выбрана очередь по " + parser.subjList[numSubj] + ":\n")
+        callback.message.from_user = callback.from_user
+        parser.joinCommand(callback.message)
+
     else:
         match callback.data:
             case "help_member":
@@ -75,6 +94,10 @@ def callback_message(callback):
                 parser.deleteCommand(callback.message)
             case "help_create":
                 parser.createCommand(callback.message)
+            case "help_join":
+                parser.joinCommand(callback.message)
+            case "help_jointo":
+                parser.jointoCommand(callback.message)
             case "commands":
                 parser.commandsList(callback.message)
             case "possibility":
@@ -84,13 +107,33 @@ def callback_message(callback):
                                                            " Бот позволяет не только выйти из очереди, если ты захотел "
                                                            "пойти на допсу, но и поменяться с другим человеком, если, "
                                                            "конечно, он будет на это согласен😈")
-            case "member_cancel" | "show_cancel" | "create_cancel" | "delete_cancel":
+            case "member_cancel" | "show_cancel" | "create_cancel" | "delete_cancel"| "jointo_cancel":
                 bot.delete_message(callback.message.chat.id, callback.message.id)
             case "member_add":
                 if callback.from_user.id in parser.sendedMemberList:
-                    bot.send_message(callback.message.chat.id, "Введи имя. которое будет отображаться при выводе сообщений:")
+                    bot.send_message(callback.message.chat.id, "Введи имя, которое будет отображаться при выводе сообщений:")
                     parser.setNameList.append(callback.from_user.id)
                     parser.sendedMemberList.remove(callback.from_user.id)
+            case "join_back":
+                if callback.from_user.id in parser.joinList:
+                    callback.message.from_user = callback.from_user
+                    parser.joinList.remove(callback.from_user.id)
+                    parser.jointoCommand(callback.message)
+            case "join_first":
+                if callback.from_user.id in parser.joinList:
+                    num = 1
+                    bot.send_message(callback.message.chat.id, "Ты записан на " + str(num) + " место")
+                    parser.joinList.remove(callback.from_user.id)
+            case "join_certain":
+                if callback.from_user.id in parser.joinList:
+                    bot.send_message(callback.message.chat.id, "Введи место для записи")
+                    parser.joinCertainList.append(callback.from_user.id)
+                    parser.joinList.remove(callback.from_user.id)
+            case "join_last":
+                if callback.from_user.id in parser.joinList:
+                    num = 10
+                    bot.send_message(callback.message.chat.id, "Ты записан на " + str(num) + " место")
+                    parser.joinList.remove(callback.from_user.id)
 
             case _:
                 return
