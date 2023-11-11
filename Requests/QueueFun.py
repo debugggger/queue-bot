@@ -3,11 +3,11 @@ from telebot import types
 
 
 class QueueFun():
-    def __init__(self, bot, subj):
+    def __init__(self, bot, botDB):
         self.bot = bot
+        self.botDB = botDB
         self.joinCertainList = []
         self.joinList = []
-        self.subj = subj
 
     def jointoCommand(self, message):
         markup = types.InlineKeyboardMarkup(row_width=3)

@@ -1,8 +1,9 @@
 from telebot import types
 
 class Subjects():
-    def __init__(self, bot):
+    def __init__(self, bot, botDB):
         self.bot = bot
+        self.botDB = botDB
         self.subjectUserList = []
         self.removesubjectUserList = []
         self.c_callbackPrefixRemovesubject = 'removesubject_'

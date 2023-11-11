@@ -1,9 +1,9 @@
 from telebot import types
 
 class QueueEntity():
-    def __init__(self, bot, subj):
+    def __init__(self, bot, botDB):
         self.bot = bot
-        self.subj = subj
+        self.botDB = botDB
 
     def createCommand(self, message):
         markup = types.InlineKeyboardMarkup(row_width=3)
