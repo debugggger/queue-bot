@@ -1,8 +1,9 @@
 from telebot import types
 
 class Users():
-    def __init__(self, bot):
+    def __init__(self, bot, botDB):
         self.bot = bot
+        self.botDB = botDB
         self.setNameList = []
         self.sendedMemberList = []
 
@@ -26,4 +27,5 @@ class Users():
         if message.from_user.id in self.setNameList:
             name = message.text
             self.bot.reply_to(message, "Отображаемое имя установлено")
+            self.botDB.add_member(message.from_user.username, message.from_user.id)
             self.setNameList.remove(message.from_user.id)

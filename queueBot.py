@@ -14,12 +14,12 @@ from db import BotDB
 
 load_dotenv()
 bot = telebot.TeleBot(os.getenv('TOKEN'))
-BotDB = BotDB()
-user = Users(bot)
-subj = Subjects(bot)
-qEntity = QueueEntity(bot, subj)
-qFun = QueueFun(bot, subj)
-commonReq = CommonReq(bot, user, qEntity, qFun, subj)
+botDB = BotDB()
+user = Users(bot, botDB)
+subj = Subjects(bot, botDB)
+qEntity = QueueEntity(bot, botDB)
+qFun = QueueFun(bot, botDB)
+commonReq = CommonReq(bot, botDB, user, qEntity, qFun, subj)
 
 
 @bot.message_handler(func=lambda message: not message.text.startswith('/'))
@@ -65,11 +65,6 @@ def subject_message(message):
 @bot.message_handler(commands=['removesubject'])
 def removesubject_message(message):
     subj.removesubjectCommand(message)
-
-@bot.message_handler(commands=['member'])
-def handle_add_user(message):
-    bot.reply_to(message, 'добавление в БД')
-    BotDB.add_member(message.from_user.username, message.from_user.id)
 
 @bot.message_handler(content_types=['left_chat_member'])
 def handle_left_chat_member(message):

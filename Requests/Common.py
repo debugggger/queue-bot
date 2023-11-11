@@ -1,12 +1,13 @@
 from telebot import types
 
 class CommonReq():
-    def __init__(self, bot, user, qEntity, qFun, subj):
+    def __init__(self, bot, botDB, user, qEntity, qFun, subj):
         self.bot = bot
+        self.botDB = botDB
         self.user = user
-        self.subj = subj
         self.qFun = qFun
         self.qEntity = qEntity
+        self.subj = subj
 
     def textHandler(self, message):
         self.subj.subjectTextHandler(message)
