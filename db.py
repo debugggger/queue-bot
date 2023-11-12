@@ -26,6 +26,28 @@ class BotDB:
                         "ON CONFLICT (\"TgNum\") DO UPDATE SET \"Name\" = EXCLUDED.\"Name\"",
                         (member_name, member_tgnum))
 
+    def getMembersCount(self):
+        with self.connection.cursor() as cur:
+            cur.execute("select count(\"IdMember\") from members")
+            res = cur.fetchall()
+            for row in res:
+                count = row[0]
+        return count
+
+    def checkPlace(self, num, queueId):
+        with self.connection.cursor() as cur:
+            count = cur.execute("select count(\"MemberId\") from QueueMembers "
+                                "where \"QueueId\" = " + str(queueId) + " and \"PlaceNumber\" = " + str(num))
+            res = cur.fetchall()
+            for row in res:
+                count = row[0]
+
+        if count == 0:
+            return 1
+        else:
+            return 0
+
+
     def close(self):
         self.connection.close()
         print("[INFO] Close connection with DB")
