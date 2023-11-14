@@ -15,8 +15,10 @@ class Subjects():
         self.subjectUserList.append(message.from_user.id)
 
     def removesubjectCommand(self, message):
+        subjects = self.botDB.getSubjects()
+
         buttons = []
-        for subject in self.subjList:
+        for [id, subject] in subjects:
             buttons.append(
                 [types.InlineKeyboardButton(subject, callback_data=self.c_callbackPrefixRemovesubject + subject)])
         markup = types.InlineKeyboardMarkup(buttons)
@@ -26,13 +28,14 @@ class Subjects():
     def subjectTextHandler(self, message):
         if message.from_user.id in self.subjectUserList:
             self.bot.send_message(message.chat.id, 'Предмет ' + message.text + ' добавлен')
-            self.subjList.append(message.text)
+            #self.subjList.append(message.text)
             self.subjectUserList.remove(message.from_user.id)
 
     def removesubjectCallback(self, callback):
         subject = callback.data.removeprefix(self.c_callbackPrefixRemovesubject)
+        self.botDB.removeSubject(subject)
         self.bot.send_message(callback.message.chat.id, 'Предмет ' + subject + ' удален')
-        self.subjList.remove(subject)
+        #self.subjList.remove(subject)
         self.removesubjectUserList.remove(callback.from_user.id)
 
     def getSubj(self):
