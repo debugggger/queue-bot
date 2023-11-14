@@ -31,7 +31,15 @@ class QueueFun():
 
     def joinTextHandler(self, message):
         if message.from_user.id in self.joinCertainList:
-            entryNum = message.text
+            try:
+                entryNum = int(message.text)
+                if entryNum <= 0:
+                    self.bot.send_message(message.chat.id, "Введи корректное число")
+                    return
+
+            except:
+                self.bot.send_message(message.chat.id, "Введи корректное число")
+                return
 
             count = self.botDB.getMembersCount()
             if (count < entryNum):
@@ -39,7 +47,7 @@ class QueueFun():
             else:
                 num = entryNum
 
-            while num > 1:
+            while num >= 1:
                 if (self.botDB.checkPlace(num, 1)):
                     self.bot.send_message(message.chat.id, "Ты записан на " + str(num) + " место")
                     self.joinList.remove(message.from_user.id)
@@ -49,7 +57,7 @@ class QueueFun():
 
             if num == 0 and message.from_user.id in self.joinCertainList:
                 num = entryNum
-                while num < count:
+                while num <= count:
                     if (self.botDB.checkPlace(num, 1)):
                         self.bot.send_message(message.chat.id, "Ты записан на " + str(num) + " место")
                         self.joinList.remove(message.from_user.id)
@@ -69,7 +77,7 @@ class QueueFun():
         if callback.from_user.id in self.joinList:
 
             place = self.botDB.getMembersCount()
-            while place > 1:
+            while place >= 1:
                 if (self.botDB.checkPlace(place, 1)):
                     self.bot.send_message(callback.message.chat.id, "Ты записан на " + str(place) + " место")
                     self.joinList.remove(callback.from_user.id)
@@ -81,14 +89,13 @@ class QueueFun():
         if callback.from_user.id in self.joinList:
             self.bot.send_message(callback.message.chat.id, "Введи место для записи")
             self.joinCertainList.append(callback.from_user.id)
-            self.joinList.remove(callback.from_user.id)
 
     def joinFirstCallback(self, callback):
         if callback.from_user.id in self.joinList:
 
             count = self.botDB.getMembersCount()
             place = 1
-            while place < count:
+            while place <= count:
                 if (self.botDB.checkPlace(place, 1)):
                     self.bot.send_message(callback.message.chat.id, "Ты записан на " + str(place) + " место")
                     self.joinList.remove(callback.from_user.id)
