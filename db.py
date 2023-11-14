@@ -47,6 +47,27 @@ class BotDB:
         else:
             return 0
 
+    def getSubjects(self):
+        with self.connection.cursor() as cur:
+            cur.execute("select * from subjects")
+            res = cur.fetchall()
+            return res
+
+    def isSubjectExist(self, name):
+        subjects = self.getSubjects()
+        subjectNames = [subject[1] for subject in subjects]
+        return (name in subjectNames)
+            
+
+    def addSubject(self, name):
+        with self.connection.cursor() as cur:
+            cur.execute("insert into subjects(\"Title\") values(%s)" ,
+                        (name, ))
+
+    def removeSubject(self, name):
+        with self.connection.cursor() as cur:
+            cur.execute("delete from subjects where \"Title\"=%s",
+                        (name, ))
 
     def close(self):
         self.connection.close()
