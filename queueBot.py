@@ -11,7 +11,7 @@ from db import Database
 from Requests.QueueEntity import QueueEntity
 from Requests.QueueFun import QueueFun
 from Requests.SubjectHandlers import SubjectHandlers
-from Requests.Users import Users
+from Requests.UserHandlers import UserHandlers
 from Requests.RuntimeInfoManager import RuntimeInfoManager
 
 load_dotenv()
@@ -22,8 +22,8 @@ botDB = Database()
 runtimeInfoManager = RuntimeInfoManager()
 
 subjectHandlers = SubjectHandlers(bot, botDB, runtimeInfoManager)
+userHandlers = UserHandlers(bot, botDB, runtimeInfoManager)
 
-user = Users(bot, botDB)
 qEntity = QueueEntity(bot, botDB)
 qFun = QueueFun(bot, botDB)
 
@@ -78,7 +78,7 @@ commandHandlers: Dict[str, Callable[[telebot.types.Message], None]] = {
     '/help': commandsList,
     '/create': qEntity.createCommand,
     '/delete': qEntity.deleteCommand,
-    '/member': user.memberCommand,
+    '/member': userHandlers.memberCommand,
     '/show': qEntity.showCommand,
     '/jointo': qFun.jointoCommand,
     '/join': qFun.joinCommand,
@@ -93,7 +93,7 @@ callbackHandlers: Dict[str, Callable[[telebot.types.CallbackQuery], None]] = {
     'showNum_': qEntity.showCallback,
     'jointoNum_': qFun.jointoCallback,
 
-    'help_member': lambda c: user.memberCommand(c.message),
+    'help_member': lambda c: userHandlers.memberCommand(c.message),
     'help_show': lambda c: qEntity.showCommand(c.message),
     'help_delete': lambda c: qEntity.deleteCommand(c.message),
     'help_create': lambda c: qEntity.createCommand(c.message),
@@ -108,7 +108,7 @@ callbackHandlers: Dict[str, Callable[[telebot.types.CallbackQuery], None]] = {
     'delete_cancel': lambda c: deleteMessage(c.message),
     'jointo_cancel': lambda c: deleteMessage(c.message),
 
-    'member_add': user.memberAddCallback,
+    'member_add': userHandlers.memberAddCallback,
     'join_back': qFun.joinBackCallback,
     'join_first': qFun.joinFirstCallback,
     'join_certain': qFun.joinCertainCallback,
@@ -117,7 +117,7 @@ callbackHandlers: Dict[str, Callable[[telebot.types.CallbackQuery], None]] = {
 
 textHandlers: List[Callable[[telebot.types.Message], None]] = {
     subjectHandlers.subjectTextHandler,
-    user.setNameTextHandler,
+    userHandlers.setNameTextHandler,
     qFun.joinTextHandler,
 }
 
