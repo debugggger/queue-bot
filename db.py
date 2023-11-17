@@ -1,11 +1,13 @@
+from typing import List
 import psycopg2
 from dotenv import load_dotenv
 import os
 
+from Entities.Subject import Subject
+
 # TODO: add other queries and functions for this
 
-class BotDB:
-
+class Database:
     def __init__(self):
         load_dotenv()
         self.connection = psycopg2.connect(
@@ -47,27 +49,26 @@ class BotDB:
         else:
             return 0
 
-    def getSubjects(self):
+    def getSubjects(self) -> List[Subject]:
         with self.connection.cursor() as cur:
             cur.execute("select * from subjects")
-            res = cur.fetchall()
-            return res
+            return list(map(lambda s: Subject(s[0], s[1]), cur.fetchall()))
 
-    def isSubjectExist(self, name):
-        subjects = self.getSubjects()
-        subjectNames = [subject[1] for subject in subjects]
-        return (name in subjectNames)
+    def isSubjectExist(self, title: str) -> bool:
+        with self.connection.cursor() as cur:
+            cur.execute("select count(\"IdSubject\") from subjects where \"Title\"=%s", (title, ))
+            count = cur.fetchall()[0][0]
+            return count != 0
             
-
-    def addSubject(self, name):
+    def addSubject(self, title: str) -> None:
         with self.connection.cursor() as cur:
             cur.execute("insert into subjects(\"Title\") values(%s)" ,
-                        (name, ))
+                        (title, ))
 
-    def removeSubject(self, name):
+    def removeSubject(self, title: str) -> None:
         with self.connection.cursor() as cur:
             cur.execute("delete from subjects where \"Title\"=%s",
-                        (name, ))
+                        (title, ))
 
     def close(self):
         self.connection.close()
