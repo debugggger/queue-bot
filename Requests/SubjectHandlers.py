@@ -6,6 +6,7 @@ from telebot import types
 from db import Database
 from Entities.Subject import Subject
 from Requests.RuntimeInfoManager import RuntimeInfoManager
+from utils import checkSubjectTitle, removeBlank
 
 class SubjectHandlers:
     def __init__(self, bot: telebot.TeleBot, database: Database, runtimeInfoManager: RuntimeInfoManager):
@@ -32,11 +33,20 @@ class SubjectHandlers:
 
     def subjectTextHandler(self, message: telebot.types.Message) -> None:
         if self.runtimeInfoManager.sendBarrier.checkAndRemove('subject', message.from_user.id):
-            if self.database.isSubjectExist(message.text):
-                self.bot.send_message(message.chat.id, 'Предмет ' + message.text + ' уже существует')
+            title: str = removeBlank(message.text)
+            
+            if not checkSubjectTitle(title):
+                self.bot.send_message(message.chat.id,
+                                      'Название предмета некорректно.\n'
+                                      'Используйте не более 30 символов русского и английского алфавита.')
                 return
-            self.database.addSubject(message.text)
-            self.bot.send_message(message.chat.id, 'Предмет ' + message.text + ' добавлен')
+
+            if self.database.isSubjectExist(title):
+                self.bot.send_message(message.chat.id, 'Предмет ' + title + ' уже существует')
+                return
+
+            self.database.addSubject(title)
+            self.bot.send_message(message.chat.id, 'Предмет ' + title + ' добавлен')
 
     def removesubjectCallback(self, callback: telebot.types.CallbackQuery) -> None:
         subject = callback.data.removeprefix(self.c_callbackPrefixRemovesubject)
