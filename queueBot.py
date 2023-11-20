@@ -124,7 +124,8 @@ textHandlers: List[Callable[[telebot.types.Message], None]] = {
 
 @bot.message_handler(func=lambda message: message.text.startswith('/'))
 def commandsHandler(message: telebot.types.Message):
-    commandHandlers[message.text](message)
+    if message.text in commandHandlers.keys():
+        commandHandlers[message.text](message)
 
 @bot.callback_query_handler(func = lambda callback: True)
 def callback_message(callback: telebot.types.CallbackQuery):
