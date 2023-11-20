@@ -37,5 +37,5 @@ class UserHandlers():
                                       'Также дефис, апостроф, пробел (но не более одного такого символа подряд).')
                 return
 
-            self.database.add_member(name, message.from_user.id)
+            self.database.addMember(name, message.from_user.id)
             self.bot.reply_to(message, "Отображаемое имя установлено")
