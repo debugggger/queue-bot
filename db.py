@@ -45,18 +45,19 @@ class Database:
         with self.connection.cursor() as cur:
             cur.execute("select id_queue from queuesubjects inner join subjects on queuesubjects.subject_id = "
                         "subjects.id_subject where subjects.title=%s",
-                        (title))
+                        title)
 
     def createQueue(self, subject_id: int) -> None:
         with self.connection.cursor() as cur:
-            cur.execute("update queuesubjects set is_last = false;"
-                        "insert into queuesubjects (subject_id, is_last) values (%i, 1) ",
-                        (subject_id))
+            cur.execute("update queuesubjects set is_last = false where true; "
+                        "commit;" 
+                        "insert into queuesubjects (subject_id, is_last) values (%s, true) ",
+                        subject_id)
 
     def deleteQueue(self, id_queue: int) -> None:
         with self.connection.cursor() as cur:
-            cur.execute("delete from queuesubjects where id_queue=%i",
-                        (id_queue))
+            cur.execute("delete from queuesubjects where id_queue=%s",
+                        (str(id_queue)))
 
     def checkPlace(self, num, queueId):
         with self.connection.cursor() as cur:

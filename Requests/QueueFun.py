@@ -12,7 +12,10 @@ class QueueFun():
         markup = types.InlineKeyboardMarkup(row_width=3)
         bt1 = types.InlineKeyboardButton("Отмена", callback_data="jointo_cancel")
         markup.row(bt1)
-        for i in range(len(self.subj)):
+
+        subjects = [subject[1] for subject in self.botDB.getSubjects()]
+
+        for i in range(len(subjects)):
             btCur = types.InlineKeyboardButton("Очередь по " + str(self.subj[i]),
                                                callback_data="jointoNum_" + str(i))
             markup.row(btCur)
