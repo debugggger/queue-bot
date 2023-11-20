@@ -21,10 +21,10 @@ class UserHandlers():
         self.runtimeInfoManager.sendBarrier.add('member1', message.from_user.id)
 
     def memberAddCallback(self, callback: telebot.types.CallbackQuery) -> None:
-        if self.runtimeInfoManager.sendBarrier.checkAndRemove('member1', callback.message.from_user.id):
+        if self.runtimeInfoManager.sendBarrier.checkAndRemove('member1', callback.from_user.id):
             self.bot.send_message(callback.message.chat.id,
                                   "Введи имя, которое будет отображаться при выводе сообщений:")
-            self.runtimeInfoManager.sendBarrier.add('member2', callback.message.from_user.id)
+            self.runtimeInfoManager.sendBarrier.add('member2', callback.from_user.id)
 
     def setNameTextHandler(self, message: telebot.types.Message) -> None:
         if self.runtimeInfoManager.sendBarrier.checkAndRemove('member2', message.from_user.id):

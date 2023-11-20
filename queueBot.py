@@ -39,16 +39,6 @@ def possibilityCommand(message: telebot.types.Message):
                      )
 
 def commandsList(message):
-    markup = types.InlineKeyboardMarkup()
-    bt1 = types.InlineKeyboardButton("/member", callback_data="help_member")
-    bt2 = types.InlineKeyboardButton("/show", callback_data="help_show")
-    bt3 = types.InlineKeyboardButton("/create", callback_data="help_create")
-    bt4 = types.InlineKeyboardButton("/join", callback_data="help_join")
-    bt5 = types.InlineKeyboardButton("/jointo", callback_data="help_jointo")
-    bt6 = types.InlineKeyboardButton("/delete", callback_data="help_delete")
-    markup.row(bt1, bt2)
-    markup.row(bt3, bt4)
-    markup.row(bt5, bt6)
     bot.send_message(message.chat.id,
                      "можно воспользоваться следующими командами:\n"
                      "/member - добавление в список пользователей\n"
@@ -56,8 +46,7 @@ def commandsList(message):
                      "/create - создание очереди\n"
                      "/join - запись в последнюю очередь\n"
                      "/jointo - запись в любую из очередей\n"
-                     "/delete - удаление очереди",
-                     reply_markup=markup)
+                     "/delete - удаление очереди")
 
 def startCommand(message):
     markup = types.InlineKeyboardMarkup()
@@ -107,7 +96,7 @@ callbackHandlers: Dict[str, Callable[[telebot.types.CallbackQuery], None]] = {
     'create_cancel': lambda c: deleteMessage(c.message),
     'delete_cancel': lambda c: deleteMessage(c.message),
     'jointo_cancel': lambda c: deleteMessage(c.message),
-
+      
     'member_add': userHandlers.memberAddCallback,
     'join_back': qFun.joinBackCallback,
     'join_first': qFun.joinFirstCallback,
