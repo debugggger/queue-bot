@@ -24,13 +24,13 @@ class Database:
 
     def add_member(self, member_name, member_tgnum):
         with self.connection.cursor() as cur:
-            cur.execute("INSERT INTO MEMBERS (\"Name\", \"TgNum\") VALUES (%s, %s) "
-                        "ON CONFLICT (\"TgNum\") DO UPDATE SET \"Name\" = EXCLUDED.\"Name\"",
+            cur.execute("insert into members (name, tg_num) values (%s, %s) "
+                        "on conflict (tg_num) do update set name = excluded.name",
                         (member_name, member_tgnum))
 
     def getMembersCount(self):
         with self.connection.cursor() as cur:
-            cur.execute("select count(\"IdMember\") from members")
+            cur.execute("select count(id_member) from members")
             res = cur.fetchall()
             for row in res:
                 count = row[0]
@@ -38,8 +38,8 @@ class Database:
 
     def checkPlace(self, num, queueId):
         with self.connection.cursor() as cur:
-            count = cur.execute("select count(\"MemberId\") from QueueMembers "
-                                "where \"QueueId\" = " + str(queueId) + " and \"PlaceNumber\" = " + str(num))
+            count = cur.execute("select count(member_id) from queuemembers "
+                                "where queue_id = " + str(queueId) + " and place_number = " + str(num))
             res = cur.fetchall()
             for row in res:
                 count = row[0]
@@ -56,18 +56,18 @@ class Database:
 
     def isSubjectExist(self, title: str) -> bool:
         with self.connection.cursor() as cur:
-            cur.execute("select count(\"IdSubject\") from subjects where \"Title\"=%s", (title, ))
+            cur.execute("select count(id_subject) from subjects where title=%s", (title, ))
             count = cur.fetchall()[0][0]
             return count != 0
             
     def addSubject(self, title: str) -> None:
         with self.connection.cursor() as cur:
-            cur.execute("insert into subjects(\"Title\") values(%s)" ,
+            cur.execute("insert into subjects(title) values(%s)",
                         (title, ))
 
     def removeSubject(self, title: str) -> None:
         with self.connection.cursor() as cur:
-            cur.execute("delete from subjects where \"Title\"=%s",
+            cur.execute("delete from subjects where title=%s",
                         (title, ))
 
     def close(self):
