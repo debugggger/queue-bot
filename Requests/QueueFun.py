@@ -1,7 +1,5 @@
 from telebot import types
 
-
-
 class QueueFun():
     def __init__(self, bot, botDB):
         self.bot = bot
