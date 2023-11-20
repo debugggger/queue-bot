@@ -2,7 +2,9 @@ from typing import List
 import psycopg2
 from dotenv import load_dotenv
 import os
+from datetime import datetime
 
+from Entities.Member import Member
 from Entities.Subject import Subject
 
 # TODO: add other queries and functions for this
@@ -69,6 +71,33 @@ class Database:
         with self.connection.cursor() as cur:
             cur.execute("delete from subjects where title=%s",
                         (title, ))
+
+    def getMembers(self) -> List[Member]:
+        with self.connection.cursor() as cur:
+            cur.execute("select * from members")
+            return list(map(lambda m: Member(m[0], m[1], m[2]), cur.fetchall()))
+
+    def getMemberByTgNum(self, tgNum: int) -> Member:
+        with self.connection.cursor() as cur:
+            cur.execute("select * from members where tg_num=%s", (str(tgNum),))
+            result = cur.fetchall()[0]
+            return Member(result[0], result[1], result[2])
+
+
+    def addToQueue(self, queue_id: int, tg_num: int, place: int, entry_type: int) -> None:
+        with self.connection.cursor() as cur:
+            dt = str(datetime.now())
+
+            member = self.getMemberByTgNum(tg_num)
+
+            cur.execute("select count(member_id) from queuemembers where member_id=\'" + str(member.id) + "\'")
+            count = cur.fetchall()[0][0]
+
+            if count != 0:
+                cur.execute("delete from queuemembers where member_id=\'" + str(member.id) + "\'")
+
+            cur.execute("insert into queuemembers(queue_id, member_id, entry_time, place_number, entry_type) values(%s, %s, %s, %s, %s)",
+                        (queue_id, member.id, dt, place, entry_type))
 
     def close(self):
         self.connection.close()
