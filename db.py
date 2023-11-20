@@ -24,19 +24,41 @@ class Database:
             cur.execute("select version();")
             print(f"server vers:  {cur.fetchone()}")
 
-    def add_member(self, member_name, member_tgnum):
+    def addMember(self, member_name: str, member_tgnum: str) -> None:
         with self.connection.cursor() as cur:
             cur.execute("insert into members (name, tg_num) values (%s, %s) "
                         "on conflict (tg_num) do update set name = excluded.name",
                         (member_name, member_tgnum))
 
-    def getMembersCount(self):
+    def deleteMember(self, member_tgnum: str) -> None:
+        with self.connection.cursor() as cur:
+            cur.execute("delete from members where tg_num=%s",
+                        (member_tgnum))
+
+    def getMembersCount(self) -> int:
         with self.connection.cursor() as cur:
             cur.execute("select count(id_member) from members")
             res = cur.fetchall()
             for row in res:
                 count = row[0]
         return count
+
+    def getQueue(self, title: str) -> int:
+        with self.connection.cursor() as cur:
+            cur.execute("select id_queue from queuesubjects inner join subjects on queuesubjects.subject_id = "
+                        "subjects.id_subject where subjects.title=%s",
+                        (title))
+
+    def createQueue(self, subject_id: int) -> None:
+        with self.connection.cursor() as cur:
+            cur.execute("update queuesubjects set is_last = false;"
+                        "insert into queuesubjects (subject_id, is_last) values (%i, 1) ",
+                        (subject_id))
+
+    def deleteQueue(self, id_queue: int) -> None:
+        with self.connection.cursor() as cur:
+            cur.execute("delete from queuesubjects where id_queue=%i",
+                        (id_queue))
 
     def checkPlace(self, num, queueId):
         with self.connection.cursor() as cur:
