@@ -74,6 +74,12 @@ class Database:
         else:
             return 0
 
+    def getMemberInQueueByPlace(self, queueId, place) -> int:
+        with self.connection.cursor() as cur:
+            cur.execute("select member_id from queuemembers where queue_id = " + str(queueId) + " and place_number = " + str(place))
+            id = cur.fetchall()[0][0]
+            return id
+
     def getSubjects(self) -> List[Subject]:
         with self.connection.cursor() as cur:
             cur.execute("select * from subjects")

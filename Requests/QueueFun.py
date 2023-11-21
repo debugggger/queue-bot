@@ -52,6 +52,13 @@ class QueueFun():
                 self.bot.send_message(message.chat.id, "Введи корректное число")
                 return
 
+            if self.botDB.getMemberInQueueByPlace(self.joinCertainList[message.from_user.id], entryNum) == self.botDB.getMemberByTgNum(message.from_user.id).id:
+                self.bot.send_message(message.chat.id,
+                                      "Ты уже записан на место " + str(entryNum))
+                self.joinList.pop(message.from_user.id)
+                self.joinCertainList.pop(message.from_user.id)
+                return
+
             count = self.botDB.getMembersCount()
             if (count < entryNum):
                 num = count
