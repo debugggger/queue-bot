@@ -79,6 +79,23 @@ class Database:
             cur.execute("select * from subjects")
             return list(map(lambda s: Subject(s[0], s[1]), cur.fetchall()))
 
+    def getLastQueue(self) -> int:
+        with self.connection.cursor() as cur:
+            cur.execute("select id_queue from queuesubjects where is_last = true")
+            id = cur.fetchall()[0][0]
+            return id
+
+    def getQueueIdBySubj(self, name) -> int:
+        with self.connection.cursor() as cur:
+            cur.execute("select id_subject from subjects where title = '" + name + "'")
+            idSubj = cur.fetchall()[0][0]
+            try:
+                cur.execute("select id_queue from queuesubjects where subject_id = %s", (idSubj,))
+                idQueue = cur.fetchall()[0][0]
+            except:
+                return -1
+            return idQueue
+
     def isSubjectExist(self, title: str) -> bool:
         with self.connection.cursor() as cur:
             cur.execute("select count(id_subject) from subjects where title=%s", (title, ))
@@ -113,7 +130,7 @@ class Database:
 
             member = self.getMemberByTgNum(tg_num)
 
-            cur.execute("select count(member_id) from queuemembers where member_id=\'" + str(member.id) + "\'")
+            cur.execute("select count(member_id) from queuemembers where member_id=\'" + str(member.id) + "\' and queue_id=\'"+str(queue_id)+"\'")
             count = cur.fetchall()[0][0]
 
             if count != 0:
