@@ -11,7 +11,7 @@ from utils import checkSubjectTitle, removeBlank
 
 class SubjectHandlers(BaseHandler):
     def subjectCommand(self, message: telebot.types.Message) -> None:
-        self.bot.send_message(message.chat.id, 'Введи название нового предмета')
+        self.bot.reply_to(message, 'Введи название нового предмета')
         self.runtimeInfoManager.sendBarrier.add('subject', message.from_user.id)
 
     def removesubjectCommand(self, message: telebot.types.Message) -> None:
@@ -42,6 +42,8 @@ class SubjectHandlers(BaseHandler):
         if self.runtimeInfoManager.sendBarrier.checkAndRemove('removesubject', message.from_user.id):
             if message.text in [s.title for s in self.database.getSubjects()]:
                 self.database.removeSubject(message.text)
-                self.bot.reply_to(message, 'Предмет удален')
+                self.bot.reply_to(message, 'Предмет удален',
+                                  reply_markup=types.ReplyKeyboardRemove())
             else:
-                self.bot.reply_to(message, 'Такого предмета и так не было. Зачем удалять то...')
+                self.bot.reply_to(message, 'Такого предмета и так не было. Зачем удалять то...',
+                                  reply_markup=types.ReplyKeyboardRemove())
