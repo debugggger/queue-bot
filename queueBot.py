@@ -78,7 +78,6 @@ commandHandlers: Dict[str, Callable[[telebot.types.Message], None]] = {
 }
 
 callbackHandlers: Dict[str, Callable[[telebot.types.CallbackQuery], None]] = {
-    subjectHandlers.c_callbackPrefixRemovesubject: subjectHandlers.removesubjectCallback,
     'createNum_': qEntity.createCallback,
     'deleteNum_': qEntity.deleteCallback,
     'showNum_': qEntity.showCallback,
@@ -99,7 +98,6 @@ callbackHandlers: Dict[str, Callable[[telebot.types.CallbackQuery], None]] = {
     'delete_cancel': lambda c: deleteMessage(c.message),
     'jointo_cancel': lambda c: deleteMessage(c.message),
 
-    'member_add': userHandlers.memberAddCallback,
     'join_back': qFun.joinBackCallback,
     'join_first': qFun.joinFirstCallback,
     'join_certain': qFun.joinCertainCallback,
