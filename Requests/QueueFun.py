@@ -7,6 +7,7 @@ class QueueFun():
         self.joinCertainList = []
         self.joinList = []
 
+
     def jointoCommand(self, message):
         markup = types.InlineKeyboardMarkup(row_width=3)
         bt1 = types.InlineKeyboardButton("Отмена", callback_data="jointo_cancel")
@@ -21,6 +22,13 @@ class QueueFun():
         self.bot.send_message(message.chat.id, "В какую очередь ты хочешь записаться?", reply_markup=markup)
 
     def joinCommand(self, message):
+        self.joinConnector(message, -1)
+
+
+    def joinConnector(self, message, id):
+        if id == -1:
+            id = self.botDB.getLastQueue()
+
         markup = types.InlineKeyboardMarkup(row_width=3)
         bt1 = types.InlineKeyboardButton("Назад", callback_data="join_back")
         bt2 = types.InlineKeyboardButton("Первое свободное", callback_data="join_first")
@@ -68,7 +76,7 @@ class QueueFun():
                     if (self.botDB.checkPlace(num, 1)):
                         self.botDB.addToQueue(1, message.from_user.id, num, 1)
                         if num != entryNum:
-                            self.bot.send_message(message.chat.id, "Место №" + str(entryNum) + "Уже занято. Ты записан на " + str(num) + " место")
+                            self.bot.send_message(message.chat.id, "Место №" + str(entryNum) + "уже занято. Ты записан на " + str(num) + " место")
                         else:
                             self.bot.send_message(message.chat.id, "Ты записан на " + str(num) + " место")
                         self.joinList.remove(message.from_user.id)
@@ -82,9 +90,19 @@ class QueueFun():
         numStr = callback.data.strip("jointoNum_")
         numSubj = int(numStr)
         subjects = [subject.title for subject in self.botDB.getSubjects()]
+        id = self.botDB.getQueueIdBySubj(subjects[numSubj])
+        if id == -1:
+            self.bot.send_message(callback.message.chat.id, "Очередь по " + subjects[numSubj] + " не существует.")
+            return
+
+
         self.bot.send_message(callback.message.chat.id, "Выбрана очередь по " + subjects[numSubj] + ":\n")
         callback.message.from_user = callback.from_user
-        self.joinCommand(callback.message)
+
+
+        self.joinConnector(callback.message, id)
+
+        #self.joinCommand(callback.message)
 
     def joinLastCallback(self, callback):
         if callback.from_user.id in self.joinList:
