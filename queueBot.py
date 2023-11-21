@@ -5,6 +5,7 @@ import time
 import telebot
 from telebot import types
 from dotenv import load_dotenv
+from Requests.RemoveHandlers import RemoveHandlers
 
 from db import Database
 
@@ -25,6 +26,7 @@ runtimeInfoManager = RuntimeInfoManager()
 
 subjectHandlers = SubjectHandlers(bot, botDB, runtimeInfoManager)
 userHandlers = UserHandlers(bot, botDB, runtimeInfoManager)
+removeHandlers = RemoveHandlers(bot, botDB, runtimeInfoManager)
 
 qEntity = QueueEntity(bot, botDB)
 qFun = QueueFun(bot, botDB)
@@ -75,6 +77,7 @@ commandHandlers: Dict[str, Callable[[telebot.types.Message], None]] = {
     '/join': qFun.joinCommand,
     '/subject': subjectHandlers.subjectCommand,
     '/removesubject': subjectHandlers.removesubjectCommand,
+    '/removefrom': removeHandlers.removefromCommand,
 }
 
 callbackHandlers: Dict[str, Callable[[telebot.types.CallbackQuery], None]] = {
@@ -108,6 +111,7 @@ textHandlers: List[Callable[[telebot.types.Message], None]] = {
     subjectHandlers.subjectTextHandler,
     userHandlers.setNameTextHandler,
     qFun.joinTextHandler,
+    removeHandlers.removeSubjectTextHandler,
 }
 
 @bot.message_handler(commands=['debug_chatid'])

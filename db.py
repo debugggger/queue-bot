@@ -123,6 +123,11 @@ class Database:
             result = cur.fetchall()[0]
             return Member(result[0], result[1], result[2])
 
+    def isMemberExistByTgNum(self, tgNum: int) -> bool:
+        with self.connection.cursor() as cur:
+            cur.execute("select * from members where tg_num=%s", (str(tgNum),))
+            return len(cur.fetchall()) != 0
+            
 
     def addToQueue(self, queue_id: int, tg_num: int, place: int, entry_type: int) -> None:
         with self.connection.cursor() as cur:
