@@ -134,7 +134,7 @@ class Database:
             count = cur.fetchall()[0][0]
 
             if count != 0:
-                cur.execute("delete from queuemembers where member_id=\'" + str(member.id) + "\'")
+                cur.execute("delete from queuemembers where member_id=\'" + str(member.id) + "\' and queue_id=\'"+str(queue_id)+"\'")
 
             cur.execute("insert into queuemembers(queue_id, member_id, entry_time, place_number, entry_type) values(%s, %s, %s, %s, %s)",
                         (queue_id, member.id, dt, place, entry_type))
