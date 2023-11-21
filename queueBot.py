@@ -112,9 +112,18 @@ textHandlers: List[Callable[[telebot.types.Message], None]] = {
     qFun.joinTextHandler,
 }
 
+@bot.message_handler(commands=['debug_chatid'])
+def commandsHandler(message: telebot.types.Message):
+    if time.time() - message.date > 3:
+        return
+
+    bot.send_message(message.chat.id, f'chat_id = {message.chat.id}')
+
 
 @bot.message_handler(func=lambda message: message.text.startswith('/'))
 def commandsHandler(message: telebot.types.Message):
+    if time.time() - message.date > 3:
+        return
     if chatId and (message.chat.id != chatId):
         return
     if message.text in commandHandlers.keys():
@@ -122,6 +131,8 @@ def commandsHandler(message: telebot.types.Message):
 
 @bot.callback_query_handler(func = lambda callback: True)
 def callback_message(callback: telebot.types.CallbackQuery):
+    if time.time() - callback.message.date > 3:
+        return
     if chatId and (callback.chat.id != chatId):
         return
     for key, handler in callbackHandlers.items():
@@ -130,14 +141,17 @@ def callback_message(callback: telebot.types.CallbackQuery):
 
 @bot.message_handler(func=lambda message: not message.text.startswith('/'))
 def handle_text(message: telebot.types.Message):
+    if time.time() - message.date > 3:
+        return
     if chatId and (message.chat.id != chatId):
         return
     for textHandler in textHandlers:
         textHandler(message)
 
-
 @bot.message_handler(content_types=['left_chat_member'])
 def handle_left_chat_member(message: telebot.types.Message):
+    if time.time() - message.date > 3:
+        return
     if chatId and (message.chat.id != chatId):
         return
     user_id = message.left_chat_member.id
