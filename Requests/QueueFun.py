@@ -20,13 +20,16 @@ class QueueFun():
             bt1 = types.InlineKeyboardButton("Отмена", callback_data="jointo_cancel")
             markup.row(bt1)
 
-            subjects = [subject.title for subject in self.botDB.getSubjects()]
-            subjectsId = [subject.id for subject in self.botDB.getSubjects()]
+            # subjects = [subject.title for subject in self.botDB.getSubjects()]
+            # subjectsId = [subject.id for subject in self.botDB.getSubjects()]
+
+            subjects = SubjectService.getSubjects(self.botDB)
 
             for i in range(len(subjects)):
-                if self.botDB.getQueueIdBySubj(subjects[i]) != -1:
-                    btCur = types.InlineKeyboardButton("Очередь по " + str(subjects[i]),
-                                                       callback_data="jointoNum_" + str(subjectsId[i]))
+                if SubjectService.isSubjectExist(self.botDB, subjects[i].title):
+
+                    btCur = types.InlineKeyboardButton("Очередь по " + subjects[i].title,
+                                                       callback_data="jointoNum_" + str(subjects[i].id))
                     markup.row(btCur)
             self.bot.send_message(message.chat.id, "В какую очередь ты хочешь записаться?", reply_markup=markup)
         else:
@@ -122,21 +125,18 @@ class QueueFun():
     def jointoCallback(self, callback):
         numStr = callback.data.strip("jointoNum_")
         numSubj = int(numStr)
-        title = self.botDB.getSubjTitleById(numSubj)
 
-        id = self.botDB.getQueueIdBySubj(title)
-        subjects = SubjectService.getSubjects(self.botDB)
-        #id = self.botDB.getQueueIdBySubj(subjects[numSubj])
-        id = QueueService.getQueueBySubjectId(self.botDB, subjects[numSubj].id).id
+        subj = SubjectService.getSubjectById(self.botDB, numSubj)
 
-        if id == -1:
-            self.bot.send_message(callback.message.chat.id, "Очередь по " + title + " не существует.")
-            return
+        queue = QueueService.getQueueBySubjectId(self.botDB, subj.id)
 
-        self.bot.send_message(callback.message.chat.id, "Выбрана очередь по " + title + ":\n")
-        callback.message.from_user = callback.from_user
+        if QueueService.isQueueExist(self.botDB, queue.id):
+            self.bot.send_message(callback.message.chat.id, "Выбрана очередь по " + subj.title + ":\n")
+            callback.message.from_user = callback.from_user
 
-        self.joinConnector(callback.message, id)
+            self.joinConnector(callback.message, queue.id)
+        else:
+            self.bot.send_message(callback.message.chat.id, "Очередь по " + subj.title + " не существует.")
 
 
     def joinLastCallback(self, callback):

@@ -18,6 +18,17 @@ class SubjectService:
             return list(map(lambda s: Subject(*s), cur.fetchall()))
 
     @staticmethod
+    def getSubjectById(database, id) -> Subject:
+        subj: Subject = Subject()
+        with database.connection.cursor() as cur:
+            cur.execute("select * from subjects where id_subject=%s", (id,))
+            result = cur.fetchall()[0]
+            subj.id = result[0]
+            subj.title = result[1]
+
+        return subj
+
+    @staticmethod
     def addSubject(database, title: str) -> None:
         with database.connection.cursor() as cur:
             cur.execute("insert into subjects(title) values(%s)",
@@ -28,4 +39,5 @@ class SubjectService:
         with database.connection.cursor() as cur:
             cur.execute("delete from subjects where title=%s",
                         (title, ))
+
 

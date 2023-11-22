@@ -5,6 +5,13 @@ from Entities.Queue import QueueMember, Queue
 class QueueService:
 
     @staticmethod
+    def isQueueExist(database, subjId: int) -> bool:
+        with database.connection.cursor() as cur:
+            cur.execute("select count(id_queue) from queuesubjects where id_queue=%s", (subjId,))
+            count = cur.fetchall()[0][0]
+            return count != 0
+
+    @staticmethod
     def getMembersInQueue(database, queueId: int) -> List[QueueMember]:
         queueMembers : List[QueueMember] = []
         with database.connection.cursor() as cur:
