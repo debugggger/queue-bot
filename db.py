@@ -51,10 +51,9 @@ class Database:
 
     def createQueue(self, subject_id: int) -> None:
         with self.connection.cursor() as cur:
-            cur.execute("update queuesubjects set is_last = false where true; "
-                        "commit;" 
+            cur.execute("update queuesubjects set is_last = false where is_last is not null; "
                         "insert into queuesubjects (subject_id, is_last) values (%s, true) ",
-                        subject_id)
+                        str(subject_id))
 
     def deleteQueue(self, id_queue: int) -> None:
         with self.connection.cursor() as cur:

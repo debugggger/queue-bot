@@ -10,20 +10,30 @@ class QueueFun():
 
 
     def jointoCommand(self, message):
-        markup = types.InlineKeyboardMarkup(row_width=3)
-        bt1 = types.InlineKeyboardButton("Отмена", callback_data="jointo_cancel")
-        markup.row(bt1)
+        members = [member.tgNum for member in self.botDB.getMembers()]
+        if str(message.from_user.id) in members:
+            markup = types.InlineKeyboardMarkup(row_width=3)
+            bt1 = types.InlineKeyboardButton("Отмена", callback_data="jointo_cancel")
+            markup.row(bt1)
 
-        subjects = [subject.title for subject in self.botDB.getSubjects()]
+            subjects = [subject.title for subject in self.botDB.getSubjects()]
 
-        for i in range(len(subjects)):
-            btCur = types.InlineKeyboardButton("Очередь по " + str(subjects[i]),
-                                               callback_data="jointoNum_" + str(i))
-            markup.row(btCur)
-        self.bot.send_message(message.chat.id, "В какую очередь ты хочешь записаться?", reply_markup=markup)
+            for i in range(len(subjects)):
+                btCur = types.InlineKeyboardButton("Очередь по " + str(subjects[i]),
+                                                   callback_data="jointoNum_" + str(i))
+                markup.row(btCur)
+            self.bot.send_message(message.chat.id, "В какую очередь ты хочешь записаться?", reply_markup=markup)
+        else:
+            self.bot.send_message(message.chat.id, "Для использования этой команды тебе нужно записаться в списочек"
+                                                   " членов закрытого клуба любителей очередей.")
 
     def joinCommand(self, message):
-        self.joinConnector(message, -1)
+        members = [member.tgNum for member in self.botDB.getMembers()]
+        if str(message.from_user.id) in members:
+            self.joinConnector(message, -1)
+        else:
+            self.bot.send_message(message.chat.id, "Для использования этой команды тебе нужно записаться в списочек"
+                                                   " членов закрытого клуба любителей очередей.")
 
     def joinConnector(self, message, queueId):
         if queueId == -1:
@@ -52,12 +62,7 @@ class QueueFun():
                 self.bot.send_message(message.chat.id, "Введи корректное число")
                 return
 
-            if self.botDB.getMemberInQueueByPlace(self.joinCertainList[message.from_user.id], entryNum) == self.botDB.getMemberByTgNum(message.from_user.id).id:
-                self.bot.send_message(message.chat.id,
-                                      "Ты уже записан на место " + str(entryNum))
-                self.joinList.pop(message.from_user.id)
-                self.joinCertainList.pop(message.from_user.id)
-                return
+
 
             count = self.botDB.getMembersCount()
             if (count < entryNum):
@@ -65,35 +70,48 @@ class QueueFun():
             else:
                 num = entryNum
 
-            while num >= 1:
+            if self.botDB.getMemberInQueueByPlace(self.joinCertainList[message.from_user.id],
+                                                  num) == self.botDB.getMemberByTgNum(message.from_user.id).id:
+                self.bot.send_message(message.chat.id,
+                                      "Ты уже записан на это место")
+                self.joinList.pop(message.from_user.id)
+                self.joinCertainList.pop(message.from_user.id)
+                return
+
+            while num <= count:
                 if (self.botDB.checkPlace(num, self.joinCertainList[message.from_user.id])):
                     self.botDB.addToQueue(self.joinCertainList[message.from_user.id], message.from_user.id, num, 1)
                     if num != entryNum:
-                        self.bot.send_message(message.chat.id, "Место №" + str(entryNum) + " уже занято. Ты записан на " + str(num) + " место")
+                        self.bot.send_message(message.chat.id,
+                                              "Место №" + str(entryNum) + " уже занято. Ты записан на " + str(
+                                                  num) + " место")
                     else:
                         self.bot.send_message(message.chat.id, "Ты записан на " + str(num) + " место")
-
                     self.joinList.pop(message.from_user.id)
                     self.joinCertainList.pop(message.from_user.id)
                     break
                 else:
-                    num -= 1
+                    num += 1
 
-            if num == 0 and message.from_user.id in self.joinCertainList:
+            if num >= count and message.from_user.id in self.joinCertainList:
                 num = entryNum
-                while num <= count:
+                while num >= 1:
                     if (self.botDB.checkPlace(num, self.joinCertainList[message.from_user.id])):
                         self.botDB.addToQueue(self.joinCertainList[message.from_user.id], message.from_user.id, num, 1)
                         if num != entryNum:
-                            self.bot.send_message(message.chat.id, "Место №" + str(entryNum) + " уже занято. Ты записан на " + str(num) + " место")
+                            self.bot.send_message(message.chat.id,
+                                                  "Место №" + str(entryNum) + " уже занято. Ты записан на " + str(
+                                                      num) + " место")
                         else:
                             self.bot.send_message(message.chat.id, "Ты записан на " + str(num) + " место")
+
                         self.joinList.pop(message.from_user.id)
                         self.joinCertainList.pop(message.from_user.id)
                         break
                     else:
-                        num += 1
-
+                        num -= 1
+            if num == 0 and message.from_user.id in self.joinCertainList:
+                self.bot.send_message(message.chat.id, "Слишком много желающих записаться, на тебя места не хватило:)")
 
     def jointoCallback(self, callback):
         numStr = callback.data.strip("jointoNum_")
