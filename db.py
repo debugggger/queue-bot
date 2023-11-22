@@ -6,6 +6,7 @@ from datetime import datetime
 
 from Entities.Member import Member
 from Entities.Subject import Subject
+from Services.MemberService import MemberService
 
 # TODO: add other queries and functions for this
 
@@ -24,24 +25,6 @@ class Database:
             cur.execute("select version();")
             print(f"server vers:  {cur.fetchone()}")
 
-    def addMember(self, member_name: str, member_tgnum: str) -> None:
-        with self.connection.cursor() as cur:
-            cur.execute("insert into members (name, tg_num) values (%s, %s) "
-                        "on conflict (tg_num) do update set name = excluded.name",
-                        (member_name, member_tgnum))
-
-    def deleteMember(self, member_tgnum: str) -> None:
-        with self.connection.cursor() as cur:
-            cur.execute("delete from members where tg_num=%s",
-                        (member_tgnum))
-
-    def getMembersCount(self) -> int:
-        with self.connection.cursor() as cur:
-            cur.execute("select count(id_member) from members")
-            res = cur.fetchall()
-            for row in res:
-                count = row[0]
-        return count
 
     def getQueue(self, title: str) -> int:
         with self.connection.cursor() as cur:
@@ -117,23 +100,12 @@ class Database:
             cur.execute("delete from subjects where title=%s",
                         (title, ))
 
-    def getMembers(self) -> List[Member]:
-        with self.connection.cursor() as cur:
-            cur.execute("select * from members")
-            return list(map(lambda m: Member(m[0], m[1], m[2]), cur.fetchall()))
-
-    def getMemberByTgNum(self, tgNum: int) -> Member:
-        with self.connection.cursor() as cur:
-            cur.execute("select * from members where tg_num=%s", (str(tgNum),))
-            result = cur.fetchall()[0]
-            return Member(result[0], result[1], result[2])
-
 
     def addToQueue(self, queue_id: int, tg_num: int, place: int, entry_type: int) -> None:
         with self.connection.cursor() as cur:
             dt = str(datetime.now())
 
-            member = self.getMemberByTgNum(tg_num)
+            member = MemberService.getMemberByTgNum(self, tg_num)
 
             cur.execute("select count(member_id) from queuemembers where member_id=\'" + str(member.id) + "\' and queue_id=\'"+str(queue_id)+"\'")
             count = cur.fetchall()[0][0]

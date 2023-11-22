@@ -1,6 +1,8 @@
 
 from telebot import types
 
+from Services.MemberService import MemberService
+
 class QueueFun():
     def __init__(self, bot, botDB):
         self.bot = bot
@@ -10,7 +12,7 @@ class QueueFun():
 
 
     def jointoCommand(self, message):
-        members = [member.tgNum for member in self.botDB.getMembers()]
+        members = [member.tgNum for member in MemberService.getMembers(self.botDB)]
         if str(message.from_user.id) in members:
             markup = types.InlineKeyboardMarkup(row_width=3)
             bt1 = types.InlineKeyboardButton("Отмена", callback_data="jointo_cancel")
@@ -28,7 +30,7 @@ class QueueFun():
                                                    " членов закрытого клуба любителей очередей.")
 
     def joinCommand(self, message):
-        members = [member.tgNum for member in self.botDB.getMembers()]
+        members = [member.tgNum for member in MemberService.getMembers(self.botDB)]
         if str(message.from_user.id) in members:
             self.joinConnector(message, -1)
         else:
@@ -64,14 +66,14 @@ class QueueFun():
 
 
 
-            count = self.botDB.getMembersCount()
+            count = MemberService.getMembersCount(self.botDB)
             if (count < entryNum):
                 num = count
             else:
                 num = entryNum
 
             if self.botDB.getMemberInQueueByPlace(self.joinCertainList[message.from_user.id],
-                                                  num) == self.botDB.getMemberByTgNum(message.from_user.id).id:
+                                                  num) == MemberService.getMemberByTgNum(self.botDB, message.from_user.id).id:
                 self.bot.send_message(message.chat.id,
                                       "Ты уже записан на это место")
                 self.joinList.pop(message.from_user.id)
@@ -130,7 +132,7 @@ class QueueFun():
 
     def joinLastCallback(self, callback):
         if callback.from_user.id in self.joinList:
-            place = self.botDB.getMembersCount()
+            place = MemberService.getMembersCount(self.botDB)
             while place >= 1:
                 if (self.botDB.checkPlace(place, self.joinList[callback.from_user.id])):
                     self.botDB.addToQueue(self.joinList[callback.from_user.id], callback.from_user.id, place, 2)
@@ -148,7 +150,7 @@ class QueueFun():
     def joinFirstCallback(self, callback):
         if callback.from_user.id in self.joinList:
 
-            count = self.botDB.getMembersCount()
+            count = MemberService.getMembersCount(self.botDB)
             place = 1
             while place <= count:
                 if (self.botDB.checkPlace(place, self.joinList[callback.from_user.id])):
