@@ -3,32 +3,23 @@ from typing import List
 import telebot
 from telebot import types
 
+from Requests.BaseHandler import BaseHandler
 from db import Database
 from Entities.Subject import Subject
 from Requests.RuntimeInfoManager import RuntimeInfoManager
 from utils import checkSubjectTitle, removeBlank
 
-class SubjectHandlers:
-    def __init__(self, bot: telebot.TeleBot, database: Database, runtimeInfoManager: RuntimeInfoManager):
-        self.bot: telebot.TeleBot = bot
-        self.database: Database = database
-        self.runtimeInfoManager: RuntimeInfoManager = runtimeInfoManager
-
-        self.c_callbackPrefixRemovesubject: str = 'removesubject_'
-
+class SubjectHandlers(BaseHandler):
     def subjectCommand(self, message: telebot.types.Message) -> None:
-        self.bot.send_message(message.chat.id, 'Введите название нового предмета')
+        self.bot.reply_to(message, 'Введи название нового предмета')
         self.runtimeInfoManager.sendBarrier.add('subject', message.from_user.id)
 
     def removesubjectCommand(self, message: telebot.types.Message) -> None:
-        subjects: List[Subject] = self.database.getSubjects()
+        markup = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True, selective=True)
+        for s in self.database.getSubjects():
+            markup.add(s.title)
 
-        buttons = []
-        for subject in subjects:
-            buttons.append(
-                [types.InlineKeyboardButton(subject.title, callback_data=self.c_callbackPrefixRemovesubject + subject.title)])
-        markup = types.InlineKeyboardMarkup(buttons)
-        self.bot.send_message(message.chat.id, 'Удалить предмет', reply_markup=markup)
+        self.bot.reply_to(message, 'Удалить предмет', reply_markup=markup)
         self.runtimeInfoManager.sendBarrier.add('removesubject', message.from_user.id)
 
     def subjectTextHandler(self, message: telebot.types.Message) -> None:
@@ -42,15 +33,17 @@ class SubjectHandlers:
                 return
 
             if self.database.isSubjectExist(title):
-                self.bot.send_message(message.chat.id, 'Предмет ' + title + ' уже существует')
+                self.bot.send_message(message.chat.id, f'Предмет {title} уже существует')
                 return
 
             self.database.addSubject(title)
-            self.bot.send_message(message.chat.id, 'Предмет ' + title + ' добавлен')
+            self.bot.send_message(message.chat.id, f'Предмет {title} добавлен')
 
-    def removesubjectCallback(self, callback: telebot.types.CallbackQuery) -> None:
-        subject = callback.data.removeprefix(self.c_callbackPrefixRemovesubject)
-        self.database.removeSubject(subject)
-        self.bot.send_message(callback.message.chat.id, 'Предмет ' + subject + ' удален')
-
-        self.runtimeInfoManager.sendBarrier.remove('removesubject', callback.from_user.id)
+        if self.runtimeInfoManager.sendBarrier.checkAndRemove('removesubject', message.from_user.id):
+            if message.text in [s.title for s in self.database.getSubjects()]:
+                self.database.removeSubject(message.text)
+                self.bot.reply_to(message, 'Предмет удален',
+                                  reply_markup=types.ReplyKeyboardRemove())
+            else:
+                self.bot.reply_to(message, 'Такого предмета и так не было. Зачем удалять то...',
+                                  reply_markup=types.ReplyKeyboardRemove())
