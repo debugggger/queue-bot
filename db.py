@@ -62,12 +62,6 @@ class Database:
             id = cur.fetchall()[0][0]
             return id
 
-    def getLastQueue(self) -> int:
-        with self.connection.cursor() as cur:
-            cur.execute("select id_queue from queuesubjects where is_last = true")
-            id = cur.fetchall()[0][0]
-            return id
-
     def getQueueIdBySubj(self, name) -> int:
         with self.connection.cursor() as cur:
             cur.execute("select id_subject from subjects where title = '" + name + "'")

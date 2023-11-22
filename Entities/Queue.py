@@ -9,13 +9,8 @@ class QueueMember:
         self.entryType: str = entryType
 
 class Queue:
-    def __init__(self):
-        self.id : int = 0
-        self.subjectId: int = 0
-        self.isLast: bool = False
-        self.members: List[QueueMember] = []
     
-    def __init__(self, id: int, subjectId: int, isLast: bool):
+    def __init__(self, id: int = 0, subjectId: int = 0, isLast: bool = False):
         self.id : int = id
         self.subjectId: int = subjectId
         self.isLast: bool = isLast

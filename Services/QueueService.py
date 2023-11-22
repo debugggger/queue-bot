@@ -22,7 +22,7 @@ class QueueService:
             queue.id = result[0]
             queue.subjectId = result[1]
             queue.isLast = result[2]
-        queue.members = database.getMembersInQueue(queue.id)
+        queue.members = QueueService.getMembersInQueue(database, queue.id)
 
         return queue
 
@@ -35,6 +35,19 @@ class QueueService:
                 queues.append(Queue(*r))
 
         for q in queues:
-            q.members = database.getMembersInQueue(q.id)
+            q.members = QueueService.getMembersInQueue(database, q.id)
 
         return queues
+
+    @staticmethod
+    def getLastQueue(database) -> Queue:
+        queue: Queue = Queue()
+        with database.connection.cursor() as cur:
+            cur.execute("select * from queuesubjects where is_last=true")
+            result = cur.fetchall()[0]
+            queue.id = result[0]
+            queue.subjectId = result[1]
+            queue.isLast = result[2]
+        queue.members = QueueService.getMembersInQueue(database, queue.id)
+
+        return queue
