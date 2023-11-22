@@ -84,6 +84,11 @@ class Database:
             cur.execute("select * from subjects")
             return list(map(lambda s: Subject(s[0], s[1]), cur.fetchall()))
 
+    def getSubjTitleById(self, idSubj) -> str:
+        with self.connection.cursor() as cur:
+            cur.execute("select title from subjects where id_subject=%s", (idSubj,))
+            return cur.fetchall()[0][0]
+
     def getLastQueue(self) -> int:
         with self.connection.cursor() as cur:
             cur.execute("select id_queue from queuesubjects where is_last = true")
