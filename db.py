@@ -62,11 +62,6 @@ class Database:
             id = cur.fetchall()[0][0]
             return id
 
-    def getSubjects(self) -> List[Subject]:
-        with self.connection.cursor() as cur:
-            cur.execute("select * from subjects")
-            return list(map(lambda s: Subject(s[0], s[1]), cur.fetchall()))
-
     def getLastQueue(self) -> int:
         with self.connection.cursor() as cur:
             cur.execute("select id_queue from queuesubjects where is_last = true")
@@ -82,24 +77,7 @@ class Database:
                 idQueue = cur.fetchall()[0][0]
             except:
                 return -1
-            return idQueue
-
-    def isSubjectExist(self, title: str) -> bool:
-        with self.connection.cursor() as cur:
-            cur.execute("select count(id_subject) from subjects where title=%s", (title, ))
-            count = cur.fetchall()[0][0]
-            return count != 0
-            
-    def addSubject(self, title: str) -> None:
-        with self.connection.cursor() as cur:
-            cur.execute("insert into subjects(title) values(%s)",
-                        (title, ))
-
-    def removeSubject(self, title: str) -> None:
-        with self.connection.cursor() as cur:
-            cur.execute("delete from subjects where title=%s",
-                        (title, ))
-
+            return idQueue      
 
     def addToQueue(self, queue_id: int, tg_num: int, place: int, entry_type: int) -> None:
         with self.connection.cursor() as cur:

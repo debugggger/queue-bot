@@ -2,6 +2,7 @@
 from telebot import types
 
 from Services.MemberService import MemberService
+from Services.SubjectService import SubjectService
 
 class QueueFun():
     def __init__(self, bot, botDB):
@@ -18,7 +19,7 @@ class QueueFun():
             bt1 = types.InlineKeyboardButton("Отмена", callback_data="jointo_cancel")
             markup.row(bt1)
 
-            subjects = [subject.title for subject in self.botDB.getSubjects()]
+            subjects = [subject.title for subject in SubjectService.getSubjects(self.botDB)]
 
             for i in range(len(subjects)):
                 btCur = types.InlineKeyboardButton("Очередь по " + str(subjects[i]),
@@ -118,7 +119,7 @@ class QueueFun():
     def jointoCallback(self, callback):
         numStr = callback.data.strip("jointoNum_")
         numSubj = int(numStr)
-        subjects = [subject.title for subject in self.botDB.getSubjects()]
+        subjects = [subject.title for subject in SubjectService.getSubjects(self.botDB)]
         id = self.botDB.getQueueIdBySubj(subjects[numSubj])
         if id == -1:
             self.bot.send_message(callback.message.chat.id, "Очередь по " + subjects[numSubj] + " не существует.")
