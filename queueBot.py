@@ -75,6 +75,16 @@ commandHandlers: Dict[str, Callable[[telebot.types.Message], None]] = {
     '/join': qFun.joinCommand,
     '/subject': subjectHandlers.subjectCommand,
     '/removesubject': subjectHandlers.removesubjectCommand,
+    '/start@queeeeueeee_bot': startCommand,
+    '/help@queeeeueeee_bot': commandsList,
+    '/create@queeeeueeee_bot': qEntity.createCommand,
+    '/delete@queeeeueeee_bot': qEntity.deleteCommand,
+    '/member@queeeeueeee_bot': userHandlers.memberCommand,
+    '/show@queeeeueeee_bot': qEntity.showCommand,
+    '/jointo@queeeeueeee_bot': qFun.jointoCommand,
+    '/join@queeeeueeee_bot': qFun.joinCommand,
+    '/subject@queeeeueeee_bot': subjectHandlers.subjectCommand,
+    '/removesubject@queeeeueeee_bot': subjectHandlers.removesubjectCommand,
 }
 
 callbackHandlers: Dict[str, Callable[[telebot.types.CallbackQuery], None]] = {
