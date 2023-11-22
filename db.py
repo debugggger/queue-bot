@@ -51,10 +51,9 @@ class Database:
 
     def createQueue(self, subject_id: int) -> None:
         with self.connection.cursor() as cur:
-            cur.execute("update queuesubjects set is_last = false where true; "
-                        "commit;" 
+            cur.execute("update queuesubjects set is_last = false where is_last is not null; "
                         "insert into queuesubjects (subject_id, is_last) values (%s, true) ",
-                        subject_id)
+                        str(subject_id))
 
     def deleteQueue(self, id_queue: int) -> None:
         with self.connection.cursor() as cur:
@@ -74,10 +73,33 @@ class Database:
         else:
             return 0
 
+    def getMemberInQueueByPlace(self, queueId, place) -> int:
+        with self.connection.cursor() as cur:
+            cur.execute("select member_id from queuemembers where queue_id = " + str(queueId) + " and place_number = " + str(place))
+            id = cur.fetchall()[0][0]
+            return id
+
     def getSubjects(self) -> List[Subject]:
         with self.connection.cursor() as cur:
             cur.execute("select * from subjects")
             return list(map(lambda s: Subject(s[0], s[1]), cur.fetchall()))
+
+    def getLastQueue(self) -> int:
+        with self.connection.cursor() as cur:
+            cur.execute("select id_queue from queuesubjects where is_last = true")
+            id = cur.fetchall()[0][0]
+            return id
+
+    def getQueueIdBySubj(self, name) -> int:
+        with self.connection.cursor() as cur:
+            cur.execute("select id_subject from subjects where title = '" + name + "'")
+            idSubj = cur.fetchall()[0][0]
+            try:
+                cur.execute("select id_queue from queuesubjects where subject_id = %s", (idSubj,))
+                idQueue = cur.fetchall()[0][0]
+            except:
+                return -1
+            return idQueue
 
     def isSubjectExist(self, title: str) -> bool:
         with self.connection.cursor() as cur:
@@ -113,11 +135,11 @@ class Database:
 
             member = self.getMemberByTgNum(tg_num)
 
-            cur.execute("select count(member_id) from queuemembers where member_id=\'" + str(member.id) + "\'")
+            cur.execute("select count(member_id) from queuemembers where member_id=\'" + str(member.id) + "\' and queue_id=\'"+str(queue_id)+"\'")
             count = cur.fetchall()[0][0]
 
             if count != 0:
-                cur.execute("delete from queuemembers where member_id=\'" + str(member.id) + "\'")
+                cur.execute("delete from queuemembers where member_id=\'" + str(member.id) + "\' and queue_id=\'"+str(queue_id)+"\'")
 
             cur.execute("insert into queuemembers(queue_id, member_id, entry_time, place_number, entry_type) values(%s, %s, %s, %s, %s)",
                         (queue_id, member.id, dt, place, entry_type))
