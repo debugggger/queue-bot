@@ -25,13 +25,13 @@ class RemoveHandlers(BaseHandler):
     def removeSubjectTextHandler(self, message: telebot.types.Message):
         if self.runtimeInfoManager.sendBarrier.checkAndRemove('removefrom', message.from_user.id):
             if not message.text.startswith('Очередь по '):
-                self.bot.send_message(message.chat.id, 'Команда отменена', reply_markup=types.ReplyKeyboardRemove())
+                self.bot.reply_to(message, 'Команда отменена', reply_markup=types.ReplyKeyboardRemove())
                 return
 
             subjectTitle = message.text.removeprefix('Очередь по ')
 
             if not SubjectService.isSubjectExist(self.database, subjectTitle):
-                self.bot.send_message(message.chat.id, 'Такого предмета не сущесвует', reply_markup=types.ReplyKeyboardRemove())
+                self.bot.reply_to(message, 'Такого предмета не сущесвует', reply_markup=types.ReplyKeyboardRemove())
                 return
 
             subject = SubjectService.getSubjectByTitle(self.database, subjectTitle)

@@ -16,11 +16,11 @@ class UserHandlers(BaseHandler):
     def setNameTextHandler(self, message: telebot.types.Message) -> None:
         if self.runtimeInfoManager.sendBarrier.checkAndRemove('member1', message.from_user.id):
             if message.text == "Ввод":
-                self.bot.send_message(message.chat.id, 'Введи имя, которое будет отображаться при выводе сообщений',
+                self.bot.reply_to(message, 'Введи имя, которое будет отображаться при выводе сообщений',
                                       reply_markup=types.ReplyKeyboardRemove())
                 self.runtimeInfoManager.sendBarrier.add('member2', message.from_user.id)
             else:
-                self.bot.send_message(message.chat.id, 'Ввод отображаемого имени отменен',
+                self.bot.reply_to(message, 'Ввод отображаемого имени отменен',
                                       reply_markup=types.ReplyKeyboardRemove())
             return
         
@@ -28,7 +28,7 @@ class UserHandlers(BaseHandler):
             name = removeBlank(message.text)
 
             if not checkMemberName(name):
-                self.bot.send_message(message.chat.id,
+                self.bot.reply_to(message,
                                       'Отображаемое имя некорректно.\n'
                                       'Используйте не более 30 символов русского и английского алфавита.'
                                       'Также дефис, апостроф, пробел (но не более одного такого символа подряд).')
