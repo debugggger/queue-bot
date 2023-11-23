@@ -92,8 +92,6 @@ commandHandlers: Dict[str, Callable[[telebot.types.Message], None]] = {
 }
 
 callbackHandlers: Dict[str, Callable[[telebot.types.CallbackQuery], None]] = {
-    'createNum_': qEntity.createCallback,
-    'deleteNum_': qEntity.deleteCallback,
     'showNum_': qEntity.showCallback,
 
     'help_member': lambda c: userHandlers.memberCommand(c.message),
