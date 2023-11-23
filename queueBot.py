@@ -6,6 +6,7 @@ import telebot
 from telebot import types
 from dotenv import load_dotenv
 from Requests.RemoveHandlers import RemoveHandlers
+from Requests.ReplaceHandlers import ReplaceHandlers
 
 from db import Database
 
@@ -27,6 +28,7 @@ runtimeInfoManager = RuntimeInfoManager()
 subjectHandlers = SubjectHandlers(bot, botDB, runtimeInfoManager)
 userHandlers = UserHandlers(bot, botDB, runtimeInfoManager)
 removeHandlers = RemoveHandlers(bot, botDB, runtimeInfoManager)
+replaceHandlers = ReplaceHandlers(bot, botDB, runtimeInfoManager)
 
 qFun = QueueFun(bot, botDB, runtimeInfoManager)
 qEntity = QueueEntity(bot, botDB, runtimeInfoManager)
@@ -78,6 +80,7 @@ commandHandlers: Dict[str, Callable[[telebot.types.Message], None]] = {
     '/subject': subjectHandlers.subjectCommand,
     '/removesubject': subjectHandlers.removesubjectCommand,
     '/removefrom': removeHandlers.removefromCommand,
+    '/replaceto': replaceHandlers.replacetoCommand,
 
     '/start@queeeeueeee_bot': startCommand,
     '/help@queeeeueeee_bot': commandsList,
@@ -110,7 +113,7 @@ callbackHandlers: Dict[str, Callable[[telebot.types.CallbackQuery], None]] = {
     'create_cancel': lambda c: deleteMessage(c.message),
     'delete_cancel': lambda c: deleteMessage(c.message),
     'jointo_cancel': lambda c: deleteMessage(c.message),
-
+    'replace_cancel': lambda c: deleteMessage(c.message),
 }
 
 textHandlers: List[Callable[[telebot.types.Message], None]] = {
@@ -118,7 +121,8 @@ textHandlers: List[Callable[[telebot.types.Message], None]] = {
     userHandlers.setNameTextHandler,
     qFun.joinTextHandler,
     qEntity.queueTextHandler,
-    removeHandlers.removeSubjectTextHandler,
+    removeHandlers.removefromTextHandler,
+    replaceHandlers.replaceTextHandler,
 }
 
 @bot.message_handler(commands=['debug_chatid'])
