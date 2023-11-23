@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import List
 
 class QueueMember:
-    def __init__(self, memberId: int, entryTime: datetime, placeNumber: int, entryType: str):
+    def __init__(self, memberId: int = 0, entryTime: datetime = '', placeNumber: int=0, entryType: str=''):
         self.memberId: int = memberId
         self.entryTime: datetime = entryTime
         self.placeNumber: int = placeNumber
