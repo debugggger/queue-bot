@@ -29,7 +29,7 @@ userHandlers = UserHandlers(bot, botDB, runtimeInfoManager)
 removeHandlers = RemoveHandlers(bot, botDB, runtimeInfoManager)
 
 qEntity = QueueEntity(bot, botDB)
-qFun = QueueFun(bot, botDB)
+qFun = QueueFun(bot, botDB, runtimeInfoManager)
 
 
 def possibilityCommand(message: telebot.types.Message):
@@ -77,14 +77,22 @@ commandHandlers: Dict[str, Callable[[telebot.types.Message], None]] = {
     '/join': qFun.joinCommand,
     '/subject': subjectHandlers.subjectCommand,
     '/removesubject': subjectHandlers.removesubjectCommand,
-    '/removefrom': removeHandlers.removefromCommand,
+    '/start@queeeeueeee_bot': startCommand,
+    '/help@queeeeueeee_bot': commandsList,
+    '/create@queeeeueeee_bot': qEntity.createCommand,
+    '/delete@queeeeueeee_bot': qEntity.deleteCommand,
+    '/member@queeeeueeee_bot': userHandlers.memberCommand,
+    '/show@queeeeueeee_bot': qEntity.showCommand,
+    '/jointo@queeeeueeee_bot': qFun.jointoCommand,
+    '/join@queeeeueeee_bot': qFun.joinCommand,
+    '/subject@queeeeueeee_bot': subjectHandlers.subjectCommand,
+    '/removesubject@queeeeueeee_bot': subjectHandlers.removesubjectCommand,
 }
 
 callbackHandlers: Dict[str, Callable[[telebot.types.CallbackQuery], None]] = {
     'createNum_': qEntity.createCallback,
     'deleteNum_': qEntity.deleteCallback,
     'showNum_': qEntity.showCallback,
-    'jointoNum_': qFun.jointoCallback,
 
     'help_member': lambda c: userHandlers.memberCommand(c.message),
     'help_show': lambda c: qEntity.showCommand(c.message),
@@ -101,10 +109,6 @@ callbackHandlers: Dict[str, Callable[[telebot.types.CallbackQuery], None]] = {
     'delete_cancel': lambda c: deleteMessage(c.message),
     'jointo_cancel': lambda c: deleteMessage(c.message),
 
-    'join_back': qFun.joinBackCallback,
-    'join_first': qFun.joinFirstCallback,
-    'join_certain': qFun.joinCertainCallback,
-    'join_last': qFun.joinLastCallback,
 }
 
 textHandlers: List[Callable[[telebot.types.Message], None]] = {
@@ -135,7 +139,7 @@ def commandsHandler(message: telebot.types.Message):
 def callback_message(callback: telebot.types.CallbackQuery):
     if time.time() - callback.message.date > 3:
         return
-    if chatId and (callback.chat.id != chatId):
+    if chatId and (callback.message.chat.id != chatId):
         return
     for key, handler in callbackHandlers.items():
         if callback.data.startswith(key):

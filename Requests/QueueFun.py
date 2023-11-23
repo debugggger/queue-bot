@@ -1,143 +1,184 @@
+import telebot
 from telebot import types
+from Entities.Subject import Subject
+from Requests.RuntimeInfoManager import RuntimeInfoManager
 
-class QueueFun():
-    def __init__(self, bot, botDB):
-        self.bot = bot
-        self.botDB = botDB
-        self.joinCertainList = []
-        self.joinList = []
+from Services.MemberService import MemberService
+from Services.QueueService import QueueService
+from Services.SubjectService import SubjectService
+from Requests.BaseHandler import BaseHandler
+from db import Database
 
+class QueueFun(BaseHandler):
+    def __init__(self, bot: telebot.TeleBot, database: Database, runtimeInfoManager: RuntimeInfoManager):
+        BaseHandler.__init__(self, bot, database, runtimeInfoManager)
+        self.joinCertainList = {}
+        self.joinList = {}
 
     def jointoCommand(self, message):
-        markup = types.InlineKeyboardMarkup(row_width=3)
-        bt1 = types.InlineKeyboardButton("Отмена", callback_data="jointo_cancel")
-        markup.row(bt1)
+        members = [member.tgNum for member in MemberService.getMembers(self.database)]
+        if str(message.from_user.id) in members:
 
-        subjects = [subject.title for subject in self.botDB.getSubjects()]
+            markup = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True, selective=True)
+            markup.add('Отмена')
+            for s in SubjectService.getSubjects(self.database):
+                if QueueService.isQueueExist(self.database, s.id):
+                    markup.add(f'Очередь по {s.title}')
 
-        for i in range(len(subjects)):
-            btCur = types.InlineKeyboardButton("Очередь по " + str(subjects[i]),
-                                               callback_data="jointoNum_" + str(i))
-            markup.row(btCur)
-        self.bot.send_message(message.chat.id, "В какую очередь ты хочешь записаться?", reply_markup=markup)
+            self.bot.send_message(message.chat.id, "В какую очередь ты хочешь записаться?", reply_markup=markup)
+            self.runtimeInfoManager.sendBarrier.add('jointo', message.from_user.id)
+        else:
+            self.bot.send_message(message.chat.id, "Для использования этой команды тебе нужно записаться в списочек"
+                                                   " членов закрытого клуба любителей очередей.")
 
     def joinCommand(self, message):
-        self.joinConnector(message, -1)
+        members = [member.tgNum for member in MemberService.getMembers(self.botDB)]
+        if str(message.from_user.id) in members:
+            self.joinConnector(message, -1)
+        else:
+            self.bot.send_message(message.chat.id, "Для использования этой команды тебе нужно записаться в списочек"
+                                                   " членов закрытого клуба любителей очередей.")
 
+    def joinConnector(self, message, queueId):
+        if queueId == -1:
+            queueId = QueueService.getLastQueue(self.database).id
 
-    def joinConnector(self, message, id):
-        if id == -1:
-            id = self.botDB.getLastQueue()
-
-        markup = types.InlineKeyboardMarkup(row_width=3)
-        bt1 = types.InlineKeyboardButton("Назад", callback_data="join_back")
-        bt2 = types.InlineKeyboardButton("Первое свободное", callback_data="join_first")
-        bt3 = types.InlineKeyboardButton("Определенное", callback_data="join_certain")
-        bt4 = types.InlineKeyboardButton("Последнее свободное", callback_data="join_last")
-        markup.row(bt1, bt2)
-        markup.row(bt3, bt4)
+        markup = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True, selective=True).add(
+            'Назад', 'Первое свободное', 'Определенное', 'Последнее свободное'
+        )
         self.bot.send_message(message.chat.id, "Выбери место для записи", reply_markup=markup)
-        self.joinList.append(message.from_user.id)
 
-    def joinTextHandler(self, message):
+        self.joinList[message.from_user.id] = queueId
+
+    def joinTextHandler(self, message: types.Message):
+
+        # Обработака ввода определенного места
         if message.from_user.id in self.joinCertainList:
             try:
                 entryNum = int(message.text)
                 if entryNum <= 0:
                     self.bot.send_message(message.chat.id, "Введи корректное число")
                     return
-
             except:
                 self.bot.send_message(message.chat.id, "Введи корректное число")
                 return
 
-            count = self.botDB.getMembersCount()
+            count = MemberService.getMembersCount(self.botDB)
             if (count < entryNum):
                 num = count
             else:
                 num = entryNum
 
-            while num >= 1:
-                if (self.botDB.checkPlace(num, 1)):
-                    self.botDB.addToQueue(1, message.from_user.id, num, 1)
+            if QueueService.isPlaceEmpty(self.botDB, num, self.joinCertainList[message.from_user.id]) == False:
+                if QueueService.getMemberInQueueByPlace(self.botDB, self.joinCertainList[message.from_user.id], num).memberId \
+                        == MemberService.getMemberByTgNum(self.botDB, message.from_user.id).id:
+                    self.bot.send_message(message.chat.id,
+                                          "Ты уже записан на желаемое место")
+                    self.joinList.pop(message.from_user.id)
+                    self.joinCertainList.pop(message.from_user.id)
+                    return
+
+            while num <= count:
+
+                if QueueService.isPlaceEmpty(self.botDB, num, self.joinCertainList[message.from_user.id]):
+
+                    QueueService.addToQueue(self.botDB, self.joinCertainList[message.from_user.id], message.from_user.id, num, 1)
                     if num != entryNum:
-                        self.bot.send_message(message.chat.id, "Место №" + str(entryNum) + " уже занято. Ты записан на " + str(num) + " место")
+                        self.bot.send_message(message.chat.id,
+                                              "Желаемое место уже занято. Ты записан на " + str(num) + " место")
                     else:
                         self.bot.send_message(message.chat.id, "Ты записан на " + str(num) + " место")
-                    self.joinList.remove(message.from_user.id)
-                    self.joinCertainList.remove(message.from_user.id)
+                    self.joinList.pop(message.from_user.id)
+                    self.joinCertainList.pop(message.from_user.id)
                     break
                 else:
-                    num -= 1
+                    num += 1
 
-            if num == 0 and message.from_user.id in self.joinCertainList:
-                num = entryNum
-                while num <= count:
-                    if (self.botDB.checkPlace(num, 1)):
-                        self.botDB.addToQueue(1, message.from_user.id, num, 1)
+            if num >= count and message.from_user.id in self.joinCertainList:
+                if (count < entryNum):
+                    num = count
+                else:
+                    num = entryNum
+                while num >= 1:
+                    if QueueService.isPlaceEmpty(self.botDB, num, self.joinCertainList[message.from_user.id]):
+                        QueueService.addToQueue(self.botDB, self.joinCertainList[message.from_user.id], message.from_user.id, num, 1)
                         if num != entryNum:
-                            self.bot.send_message(message.chat.id, "Место №" + str(entryNum) + "уже занято. Ты записан на " + str(num) + " место")
+                            self.bot.send_message(message.chat.id,
+                                                  "Желаемое место уже занято. Ты записан на " + str(num) + " место")
                         else:
                             self.bot.send_message(message.chat.id, "Ты записан на " + str(num) + " место")
-                        self.joinList.remove(message.from_user.id)
-                        self.joinCertainList.remove(message.from_user.id)
+
+                        self.joinList.pop(message.from_user.id)
+                        self.joinCertainList.pop(message.from_user.id)
                         break
                     else:
-                        num += 1
+                        num -= 1
+            if num == 0 and message.from_user.id in self.joinCertainList:
+                self.bot.send_message(message.chat.id, "Слишком много желающих записаться, на тебя места не хватило:)")
 
-
-    def jointoCallback(self, callback):
-        numStr = callback.data.strip("jointoNum_")
-        numSubj = int(numStr)
-        subjects = [subject.title for subject in self.botDB.getSubjects()]
-        id = self.botDB.getQueueIdBySubj(subjects[numSubj])
-        if id == -1:
-            self.bot.send_message(callback.message.chat.id, "Очередь по " + subjects[numSubj] + " не существует.")
             return
 
+        # Обработка выбора очереди по команде /jointo
+        if self.runtimeInfoManager.sendBarrier.checkAndRemove('jointo', message.from_user.id):
+            if not message.text.startswith('Очередь по '):
+                self.bot.send_message(message.chat.id, 'Команда отменена', reply_markup=types.ReplyKeyboardRemove())
+                return
 
-        self.bot.send_message(callback.message.chat.id, "Выбрана очередь по " + subjects[numSubj] + ":\n")
-        callback.message.from_user = callback.from_user
+            subjectTitle = message.text.removeprefix('Очередь по ')
 
+            if not SubjectService.isSubjectExist(self.database, subjectTitle):
+                self.bot.send_message(message.chat.id, 'Такого предмета не сущесвует', reply_markup=types.ReplyKeyboardRemove())
+                return
 
-        self.joinConnector(callback.message, id)
+            subject: Subject = SubjectService.getSubjectByTitle(self.database, subjectTitle)
 
-        #self.joinCommand(callback.message)
+            if QueueService.isQueueExist(self.database, subject.id):
+                queue = QueueService.getQueueBySubjectId(self.database, subject.id)
+                self.bot.send_message(message.chat.id, "Выбрана очередь по " + subject.title + ":\n", reply_markup=types.ReplyKeyboardRemove())
+                self.joinConnector(message, queue.id)
+            else:
+                self.bot.send_message(message.chat.id, "Очередь по " + subject.title + " не существует.", reply_markup=types.ReplyKeyboardRemove())
 
-    def joinLastCallback(self, callback):
-        if callback.from_user.id in self.joinList:
+            return
 
-            place = self.botDB.getMembersCount()
-            while place >= 1:
-                if (self.botDB.checkPlace(place, 1)):
-                    self.botDB.addToQueue(1, callback.from_user.id, place, 2)
-                    self.bot.send_message(callback.message.chat.id, "Ты записан на " + str(place) + " место")
-                    self.joinList.remove(callback.from_user.id)
-                    break
-                else:
-                    place -= 1
+        # Выбор типа записи в очередь (первое свободное, и т.д.)
+        if message.from_user.id in self.joinList:
+            match message.text:
+                case 'Первое свободное':
+                    self.joinFirst(message)
+                case 'Определенное':
+                    self.joinCertain(message)
+                case 'Последнее свободное':
+                    self.joinLast(message)
+                case _:
+                    self.joinList.pop(message.from_user.id)
+                    self.jointoCommand(message)
 
-    def joinCertainCallback(self, callback):
-        if callback.from_user.id in self.joinList:
-            self.bot.send_message(callback.message.chat.id, "Введи место для записи")
-            self.joinCertainList.append(callback.from_user.id)
+            return
 
-    def joinFirstCallback(self, callback):
-        if callback.from_user.id in self.joinList:
+    def joinLast(self, message: types.Message):
+        place = MemberService.getMembersCount(self.database)
+        while place >= 1:
+            if QueueService.isPlaceEmpty(self.database, place, self.joinList[message.from_user.id]):
+                QueueService.addToQueue(self.database, self.joinList[message.from_user.id], message.from_user.id, place, 2)
+                self.bot.send_message(message.chat.id, "Ты записан на " + str(place) + " место", reply_markup=types.ReplyKeyboardRemove())
+                self.joinList.pop(message.from_user.id)
+                break
+            else:
+                place -= 1
 
-            count = self.botDB.getMembersCount()
-            place = 1
-            while place <= count:
-                if (self.botDB.checkPlace(place, 1)):
-                    self.botDB.addToQueue(1, callback.from_user.id, place, 0)
-                    self.bot.send_message(callback.message.chat.id, "Ты записан на " + str(place) + " место")
-                    self.joinList.remove(callback.from_user.id)
-                    break
-                else:
-                    place += 1
+    def joinCertain(self, message: types.Message):
+        self.bot.send_message(message.chat.id, "Введи место для записи", reply_markup=types.ReplyKeyboardRemove())
+        self.joinCertainList[message.from_user.id] = self.joinList[message.from_user.id]
 
-    def joinBackCallback(self, callback):
-        if callback.from_user.id in self.joinList:
-            callback.message.from_user = callback.from_user
-            self.joinList.remove(callback.from_user.id)
-            self.jointoCommand(callback.message)
+    def joinFirst(self, message: types.Message):
+        count = MemberService.getMembersCount(self.database)
+        place = 1
+        while place <= count:
+            if QueueService.isPlaceEmpty(self.database, place, self.joinList[message.from_user.id]):
+                QueueService.addToQueue(self.database, self.joinList[message.from_user.id], message.from_user.id, place, 0)
+                self.bot.send_message(message.chat.id, "Ты записан на " + str(place) + " место", reply_markup=types.ReplyKeyboardRemove())
+                self.joinList.pop(message.from_user.id)
+                break
+            else:
+                place += 1

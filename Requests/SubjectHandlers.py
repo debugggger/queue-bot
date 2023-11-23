@@ -4,6 +4,7 @@ import telebot
 from telebot import types
 
 from Requests.BaseHandler import BaseHandler
+from Services.SubjectService import SubjectService
 from db import Database
 from Entities.Subject import Subject
 from Requests.RuntimeInfoManager import RuntimeInfoManager
@@ -16,7 +17,7 @@ class SubjectHandlers(BaseHandler):
 
     def removesubjectCommand(self, message: telebot.types.Message) -> None:
         markup = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True, selective=True)
-        for s in self.database.getSubjects():
+        for s in SubjectService.getSubjects(self.database):
             markup.add(s.title)
 
         self.bot.reply_to(message, 'Удалить предмет', reply_markup=markup)
@@ -32,16 +33,16 @@ class SubjectHandlers(BaseHandler):
                                       'Используйте не более 30 символов русского и английского алфавита.')
                 return
 
-            if self.database.isSubjectExist(title):
+            if SubjectService.isSubjectExist(self.database, title):
                 self.bot.send_message(message.chat.id, f'Предмет {title} уже существует')
                 return
 
-            self.database.addSubject(title)
+            SubjectService.addSubject(self.database, title)
             self.bot.send_message(message.chat.id, f'Предмет {title} добавлен')
 
         if self.runtimeInfoManager.sendBarrier.checkAndRemove('removesubject', message.from_user.id):
-            if message.text in [s.title for s in self.database.getSubjects()]:
-                self.database.removeSubject(message.text)
+            if message.text in [s.title for s in SubjectService.getSubjects(self.database)]:
+                SubjectService.removeSubject(self.database, message.text)
                 self.bot.reply_to(message, 'Предмет удален',
                                   reply_markup=types.ReplyKeyboardRemove())
             else:
