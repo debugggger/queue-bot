@@ -9,6 +9,9 @@ class SendBarrier:
         self.data : Dict[str, List[int]] = {}
 
     def add(self, key: str, tgId: int) -> None:
+        for item in self.data.values():
+            if tgId in item:
+                item.remove(tgId)
         if key in self.data:
             self.data[key].append(tgId)
         else:
