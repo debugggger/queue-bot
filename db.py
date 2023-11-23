@@ -6,6 +6,7 @@ from datetime import datetime
 
 from Entities.Member import Member
 from Entities.Subject import Subject
+from Services.MemberService import MemberService
 
 # TODO: add other queries and functions for this
 
@@ -24,24 +25,6 @@ class Database:
             cur.execute("select version();")
             print(f"server vers:  {cur.fetchone()}")
 
-    def addMember(self, member_name: str, member_tgnum: str) -> None:
-        with self.connection.cursor() as cur:
-            cur.execute("insert into members (name, tg_num) values (%s, %s) "
-                        "on conflict (tg_num) do update set name = excluded.name",
-                        (member_name, member_tgnum))
-
-    def deleteMember(self, member_tgnum: str) -> None:
-        with self.connection.cursor() as cur:
-            cur.execute("delete from members where tg_num=%s",
-                        (member_tgnum))
-
-    def getMembersCount(self) -> int:
-        with self.connection.cursor() as cur:
-            cur.execute("select count(id_member) from members")
-            res = cur.fetchall()
-            for row in res:
-                count = row[0]
-        return count
 
     def getQueue(self, title: str) -> int:
         with self.connection.cursor() as cur:
@@ -60,89 +43,6 @@ class Database:
             cur.execute("delete from queuesubjects where id_queue=%s",
                         (str(id_queue)))
 
-    def checkPlace(self, num, queueId):
-        with self.connection.cursor() as cur:
-            count = cur.execute("select count(member_id) from queuemembers "
-                                "where queue_id = " + str(queueId) + " and place_number = " + str(num))
-            res = cur.fetchall()
-            for row in res:
-                count = row[0]
-
-        if count == 0:
-            return 1
-        else:
-            return 0
-
-    def getMemberInQueueByPlace(self, queueId, place) -> int:
-        with self.connection.cursor() as cur:
-            cur.execute("select member_id from queuemembers where queue_id = " + str(queueId) + " and place_number = " + str(place))
-            id = cur.fetchall()[0][0]
-            return id
-
-    def getSubjects(self) -> List[Subject]:
-        with self.connection.cursor() as cur:
-            cur.execute("select * from subjects")
-            return list(map(lambda s: Subject(s[0], s[1]), cur.fetchall()))
-
-    def getLastQueue(self) -> int:
-        with self.connection.cursor() as cur:
-            cur.execute("select id_queue from queuesubjects where is_last = true")
-            id = cur.fetchall()[0][0]
-            return id
-
-    def getQueueIdBySubj(self, name) -> int:
-        with self.connection.cursor() as cur:
-            cur.execute("select id_subject from subjects where title = '" + name + "'")
-            idSubj = cur.fetchall()[0][0]
-            try:
-                cur.execute("select id_queue from queuesubjects where subject_id = %s", (idSubj,))
-                idQueue = cur.fetchall()[0][0]
-            except:
-                return -1
-            return idQueue
-
-    def isSubjectExist(self, title: str) -> bool:
-        with self.connection.cursor() as cur:
-            cur.execute("select count(id_subject) from subjects where title=%s", (title, ))
-            count = cur.fetchall()[0][0]
-            return count != 0
-            
-    def addSubject(self, title: str) -> None:
-        with self.connection.cursor() as cur:
-            cur.execute("insert into subjects(title) values(%s)",
-                        (title, ))
-
-    def removeSubject(self, title: str) -> None:
-        with self.connection.cursor() as cur:
-            cur.execute("delete from subjects where title=%s",
-                        (title, ))
-
-    def getMembers(self) -> List[Member]:
-        with self.connection.cursor() as cur:
-            cur.execute("select * from members")
-            return list(map(lambda m: Member(m[0], m[1], m[2]), cur.fetchall()))
-
-    def getMemberByTgNum(self, tgNum: int) -> Member:
-        with self.connection.cursor() as cur:
-            cur.execute("select * from members where tg_num=%s", (str(tgNum),))
-            result = cur.fetchall()[0]
-            return Member(result[0], result[1], result[2])
-
-
-    def addToQueue(self, queue_id: int, tg_num: int, place: int, entry_type: int) -> None:
-        with self.connection.cursor() as cur:
-            dt = str(datetime.now())
-
-            member = self.getMemberByTgNum(tg_num)
-
-            cur.execute("select count(member_id) from queuemembers where member_id=\'" + str(member.id) + "\' and queue_id=\'"+str(queue_id)+"\'")
-            count = cur.fetchall()[0][0]
-
-            if count != 0:
-                cur.execute("delete from queuemembers where member_id=\'" + str(member.id) + "\' and queue_id=\'"+str(queue_id)+"\'")
-
-            cur.execute("insert into queuemembers(queue_id, member_id, entry_time, place_number, entry_type) values(%s, %s, %s, %s, %s)",
-                        (queue_id, member.id, dt, place, entry_type))
 
     def close(self):
         self.connection.close()

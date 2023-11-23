@@ -1,5 +1,6 @@
 import telebot
 from telebot import types
+from Services.MemberService import MemberService
 
 from db import Database
 from Requests.RuntimeInfoManager import RuntimeInfoManager
@@ -33,5 +34,5 @@ class UserHandlers(BaseHandler):
                                       'Также дефис, апостроф, пробел (но не более одного такого символа подряд).')
                 return
 
-            self.database.addMember(name, message.from_user.id)
+            MemberService.addMember(self.database, name, message.from_user.id)
             self.bot.reply_to(message, 'Отображаемое имя установлено')

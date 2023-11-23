@@ -1,6 +1,10 @@
 
 from telebot import types
 
+from Services.MemberService import MemberService
+from Services.QueueService import QueueService
+from Services.SubjectService import SubjectService
+
 class QueueFun():
     def __init__(self, bot, botDB):
         self.bot = bot
@@ -10,25 +14,26 @@ class QueueFun():
 
 
     def jointoCommand(self, message):
-        members = [member.tgNum for member in self.botDB.getMembers()]
+        members = [member.tgNum for member in MemberService.getMembers(self.botDB)]
         if str(message.from_user.id) in members:
             markup = types.InlineKeyboardMarkup(row_width=3)
             bt1 = types.InlineKeyboardButton("Отмена", callback_data="jointo_cancel")
             markup.row(bt1)
 
-            subjects = [subject.title for subject in self.botDB.getSubjects()]
-
+            subjects = SubjectService.getSubjects(self.botDB)
             for i in range(len(subjects)):
-                btCur = types.InlineKeyboardButton("Очередь по " + str(subjects[i]),
-                                                   callback_data="jointoNum_" + str(i))
-                markup.row(btCur)
+                if QueueService.isQueueExist(self.botDB, subjects[i].id):
+
+                    btCur = types.InlineKeyboardButton("Очередь по " + subjects[i].title,
+                                                       callback_data="jointoNum_" + str(subjects[i].id))
+                    markup.row(btCur)
             self.bot.send_message(message.chat.id, "В какую очередь ты хочешь записаться?", reply_markup=markup)
         else:
             self.bot.send_message(message.chat.id, "Для использования этой команды тебе нужно записаться в списочек"
                                                    " членов закрытого клуба любителей очередей.")
 
     def joinCommand(self, message):
-        members = [member.tgNum for member in self.botDB.getMembers()]
+        members = [member.tgNum for member in MemberService.getMembers(self.botDB)]
         if str(message.from_user.id) in members:
             self.joinConnector(message, -1)
         else:
@@ -37,7 +42,7 @@ class QueueFun():
 
     def joinConnector(self, message, queueId):
         if queueId == -1:
-            queueId = self.botDB.getLastQueue()
+            queueId = QueueService.getLastQueue(self.botDB).id
 
         markup = types.InlineKeyboardMarkup(row_width=3)
         bt1 = types.InlineKeyboardButton("Назад", callback_data="join_back")
@@ -57,34 +62,33 @@ class QueueFun():
                 if entryNum <= 0:
                     self.bot.send_message(message.chat.id, "Введи корректное число")
                     return
-
             except:
                 self.bot.send_message(message.chat.id, "Введи корректное число")
                 return
 
-
-
-            count = self.botDB.getMembersCount()
+            count = MemberService.getMembersCount(self.botDB)
             if (count < entryNum):
                 num = count
             else:
                 num = entryNum
 
-            if self.botDB.getMemberInQueueByPlace(self.joinCertainList[message.from_user.id],
-                                                  num) == self.botDB.getMemberByTgNum(message.from_user.id).id:
-                self.bot.send_message(message.chat.id,
-                                      "Ты уже записан на это место")
-                self.joinList.pop(message.from_user.id)
-                self.joinCertainList.pop(message.from_user.id)
-                return
+            if QueueService.isPlaceEmpty(self.botDB, num, self.joinCertainList[message.from_user.id]) == False:
+                if QueueService.getMemberInQueueByPlace(self.botDB, self.joinCertainList[message.from_user.id], num).memberId \
+                        == MemberService.getMemberByTgNum(self.botDB, message.from_user.id).id:
+                    self.bot.send_message(message.chat.id,
+                                          "Ты уже записан на желаемое место")
+                    self.joinList.pop(message.from_user.id)
+                    self.joinCertainList.pop(message.from_user.id)
+                    return
 
             while num <= count:
-                if (self.botDB.checkPlace(num, self.joinCertainList[message.from_user.id])):
-                    self.botDB.addToQueue(self.joinCertainList[message.from_user.id], message.from_user.id, num, 1)
+
+                if QueueService.isPlaceEmpty(self.botDB, num, self.joinCertainList[message.from_user.id]):
+
+                    QueueService.addToQueue(self.botDB, self.joinCertainList[message.from_user.id], message.from_user.id, num, 1)
                     if num != entryNum:
                         self.bot.send_message(message.chat.id,
-                                              "Место №" + str(entryNum) + " уже занято. Ты записан на " + str(
-                                                  num) + " место")
+                                              "Желаемое место уже занято. Ты записан на " + str(num) + " место")
                     else:
                         self.bot.send_message(message.chat.id, "Ты записан на " + str(num) + " место")
                     self.joinList.pop(message.from_user.id)
@@ -94,14 +98,16 @@ class QueueFun():
                     num += 1
 
             if num >= count and message.from_user.id in self.joinCertainList:
-                num = entryNum
+                if (count < entryNum):
+                    num = count
+                else:
+                    num = entryNum
                 while num >= 1:
-                    if (self.botDB.checkPlace(num, self.joinCertainList[message.from_user.id])):
-                        self.botDB.addToQueue(self.joinCertainList[message.from_user.id], message.from_user.id, num, 1)
+                    if QueueService.isPlaceEmpty(self.botDB, num, self.joinCertainList[message.from_user.id]):
+                        QueueService.addToQueue(self.botDB, self.joinCertainList[message.from_user.id], message.from_user.id, num, 1)
                         if num != entryNum:
                             self.bot.send_message(message.chat.id,
-                                                  "Место №" + str(entryNum) + " уже занято. Ты записан на " + str(
-                                                      num) + " место")
+                                                  "Желаемое место уже занято. Ты записан на " + str(num) + " место")
                         else:
                             self.bot.send_message(message.chat.id, "Ты записан на " + str(num) + " место")
 
@@ -116,29 +122,32 @@ class QueueFun():
     def jointoCallback(self, callback):
         numStr = callback.data.strip("jointoNum_")
         numSubj = int(numStr)
-        subjects = [subject.title for subject in self.botDB.getSubjects()]
-        id = self.botDB.getQueueIdBySubj(subjects[numSubj])
-        if id == -1:
-            self.bot.send_message(callback.message.chat.id, "Очередь по " + subjects[numSubj] + " не существует.")
-            return
 
-        self.bot.send_message(callback.message.chat.id, "Выбрана очередь по " + subjects[numSubj] + ":\n")
-        callback.message.from_user = callback.from_user
+        subj = SubjectService.getSubjectById(self.botDB, numSubj)
 
-        self.joinConnector(callback.message, id)
+        if QueueService.isQueueExist(self.botDB, subj.id):
+            queue = QueueService.getQueueBySubjectId(self.botDB, subj.id)
+            self.bot.send_message(callback.message.chat.id, "Выбрана очередь по " + subj.title + ":\n")
+            callback.message.from_user = callback.from_user
+
+            self.joinConnector(callback.message, queue.id)
+        else:
+            self.bot.send_message(callback.message.chat.id, "Очередь по " + subj.title + " не существует.")
 
 
     def joinLastCallback(self, callback):
         if callback.from_user.id in self.joinList:
-            place = self.botDB.getMembersCount()
+            place = MemberService.getMembersCount(self.botDB)
             while place >= 1:
-                if (self.botDB.checkPlace(place, self.joinList[callback.from_user.id])):
-                    self.botDB.addToQueue(self.joinList[callback.from_user.id], callback.from_user.id, place, 2)
+
+                if QueueService.isPlaceEmpty(self.botDB, place, self.joinList[callback.from_user.id]):
+                    QueueService.addToQueue(self.botDB, self.joinList[callback.from_user.id], callback.from_user.id, place, 2)
                     self.bot.send_message(callback.message.chat.id, "Ты записан на " + str(place) + " место")
                     self.joinList.pop(callback.from_user.id)
                     break
                 else:
                     place -= 1
+
 
     def joinCertainCallback(self, callback):
         if callback.from_user.id in self.joinList:
@@ -148,11 +157,11 @@ class QueueFun():
     def joinFirstCallback(self, callback):
         if callback.from_user.id in self.joinList:
 
-            count = self.botDB.getMembersCount()
+            count = MemberService.getMembersCount(self.botDB)
             place = 1
             while place <= count:
-                if (self.botDB.checkPlace(place, self.joinList[callback.from_user.id])):
-                    self.botDB.addToQueue(self.joinList[callback.from_user.id], callback.from_user.id, place, 0)
+                if QueueService.isPlaceEmpty(self.botDB, place, self.joinList[callback.from_user.id]):
+                    QueueService.addToQueue(self.botDB, self.joinList[callback.from_user.id], callback.from_user.id, place, 0)
                     self.bot.send_message(callback.message.chat.id, "Ты записан на " + str(place) + " место")
                     self.joinList.pop(callback.from_user.id)
                     break
