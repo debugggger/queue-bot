@@ -40,6 +40,9 @@ class QueueFun(BaseHandler):
                                                    " членов закрытого клуба любителей очередей.")
 
     def joinConnector(self, message, queueId):
+        if len(QueueService.getQueues(self.database)) == 0:
+            self.bot.reply_to(message, "Нет ни одной очереди, как так то....")
+            return
         if queueId == -1:
             queueId = QueueService.getLastQueue(self.database).id
 
