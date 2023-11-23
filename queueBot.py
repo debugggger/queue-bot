@@ -26,7 +26,7 @@ runtimeInfoManager = RuntimeInfoManager()
 subjectHandlers = SubjectHandlers(bot, botDB, runtimeInfoManager)
 userHandlers = UserHandlers(bot, botDB, runtimeInfoManager)
 
-qEntity = QueueEntity(bot, botDB)
+qEntity = QueueEntity(bot, botDB, runtimeInfoManager)
 qFun = QueueFun(bot, botDB)
 
 
@@ -118,6 +118,7 @@ textHandlers: List[Callable[[telebot.types.Message], None]] = {
     subjectHandlers.subjectTextHandler,
     userHandlers.setNameTextHandler,
     qFun.joinTextHandler,
+    qEntity.queueTextHandler,
 }
 
 @bot.message_handler(commands=['debug_chatid'])

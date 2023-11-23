@@ -38,3 +38,10 @@ class MemberService:
             cur.execute("select * from members where tg_num=%s", (str(tgNum),))
             result = cur.fetchall()[0]
             return Member(*result)
+
+    @staticmethod
+    def getMemberById(database, id: int) -> Member:
+        with database.connection.cursor() as cur:
+            cur.execute("select * from members where id_member=%s", (str(id),))
+            result = cur.fetchall()[0]
+            return Member(*result)

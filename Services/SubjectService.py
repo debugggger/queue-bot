@@ -29,6 +29,17 @@ class SubjectService:
         return subj
 
     @staticmethod
+    def getSubjectByTitle(database, title) -> Subject:
+        subj: Subject = Subject()
+        with database.connection.cursor() as cur:
+            cur.execute("select * from subjects where title=%s", (title,))
+            result = cur.fetchall()[0]
+            subj.id = result[0]
+            subj.title = result[1]
+
+        return subj
+
+    @staticmethod
     def addSubject(database, title: str) -> None:
         with database.connection.cursor() as cur:
             cur.execute("insert into subjects(title) values(%s)",
