@@ -86,7 +86,7 @@ class QueueEntity(BaseHandler):
 
         if self.runtimeInfoManager.sendBarrier.check('show', message.from_user.id):
             title: str = removeBlank(message.text)
-            if title == "Отмена":
+            if title == "❌ Отмена":
                 self.bot.reply_to(message, 'Команда отменена',
                                   reply_markup=types.ReplyKeyboardRemove(selective=True))
                 return
