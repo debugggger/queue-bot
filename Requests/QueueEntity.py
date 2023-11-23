@@ -16,7 +16,7 @@ class QueueEntity(BaseHandler):
         bt1 = types.InlineKeyboardButton("Отмена", callback_data="create_cancel")
         markup.row(bt1)
         subjects = [subject.title for subject in SubjectService.getSubjects(self.database)]
-        
+
         for i in range(len(subjects)):
             btCur = types.InlineKeyboardButton(str(subjects[i]), callback_data="createNum_" + str(i))
             markup.row(btCur)
@@ -57,12 +57,12 @@ class QueueEntity(BaseHandler):
     def showCommand(self, message):
         markup = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True, selective=True)
         subjects = SubjectService.getSubjects(self.database)
+        markup.add('❌ Отмена')
 
         for i in range(len(subjects)):
             if QueueService.isQueueExist(self.database, subjects[i].id):
                 markup.add(str(subjects[i].title))
 
-        markup.add("Отмена")
         self.bot.reply_to(message, 'По какому предмету ты хочешь просмотреть очередь?', reply_markup=markup)
         self.runtimeInfoManager.sendBarrier.add('show', message.from_user.id)
 
@@ -70,6 +70,10 @@ class QueueEntity(BaseHandler):
 
         if self.runtimeInfoManager.sendBarrier.check('show', message.from_user.id):
             title: str = removeBlank(message.text)
+            if title == "Отмена":
+                self.bot.reply_to(message, 'Команда отменена',
+                                  reply_markup=types.ReplyKeyboardRemove(selective=True))
+                return
 
             if SubjectService.isSubjectExist(self.database, title):
 
@@ -87,5 +91,5 @@ class QueueEntity(BaseHandler):
                     resStr += str(q) + sortedQ[q]
 
                 self.bot.reply_to(message, "Очередь по " + title + ":\n" + resStr)
-            elif title != "Отмена":
+            else:
                 self.bot.reply_to(message, "Очереди по такому предмету нет")
