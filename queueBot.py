@@ -28,8 +28,8 @@ subjectHandlers = SubjectHandlers(bot, botDB, runtimeInfoManager)
 userHandlers = UserHandlers(bot, botDB, runtimeInfoManager)
 removeHandlers = RemoveHandlers(bot, botDB, runtimeInfoManager)
 
-qEntity = QueueEntity(bot, botDB)
 qFun = QueueFun(bot, botDB, runtimeInfoManager)
+qEntity = QueueEntity(bot, botDB, runtimeInfoManager)
 
 
 def possibilityCommand(message: telebot.types.Message):
@@ -117,6 +117,7 @@ textHandlers: List[Callable[[telebot.types.Message], None]] = {
     subjectHandlers.subjectTextHandler,
     userHandlers.setNameTextHandler,
     qFun.joinTextHandler,
+    qEntity.queueTextHandler,
     removeHandlers.removeSubjectTextHandler,
 }
 
