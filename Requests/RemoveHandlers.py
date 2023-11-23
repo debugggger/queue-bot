@@ -25,13 +25,13 @@ class RemoveHandlers(BaseHandler):
     def removeSubjectTextHandler(self, message: telebot.types.Message):
         if self.runtimeInfoManager.sendBarrier.checkAndRemove('removefrom', message.from_user.id):
             if not message.text.startswith('Очередь по '):
-                self.bot.reply_to(message, 'Команда отменена', reply_markup=types.ReplyKeyboardRemove())
+                self.bot.reply_to(message, 'Команда отменена', reply_markup=types.ReplyKeyboardRemove(selective=True))
                 return
 
             subjectTitle = message.text.removeprefix('Очередь по ')
 
             if not SubjectService.isSubjectExist(self.database, subjectTitle):
-                self.bot.reply_to(message, 'Такого предмета не сущесвует', reply_markup=types.ReplyKeyboardRemove())
+                self.bot.reply_to(message, 'Такого предмета не сущесвует', reply_markup=types.ReplyKeyboardRemove(selective=True))
                 return
 
             subject = SubjectService.getSubjectByTitle(self.database, subjectTitle)
@@ -40,13 +40,13 @@ class RemoveHandlers(BaseHandler):
                 member = MemberService.getMemberByTgNum(self.database, message.from_user.id)
                 if not QueueService.isMemberInQueue(self.database, queue.id, member.id):
                     self.bot.reply_to(message, 'Тебя еще нет в этой очереди. Как так то?!',
-                                      reply_markup=types.ReplyKeyboardRemove())
+                                      reply_markup=types.ReplyKeyboardRemove(selective=True))
                 else:
                     QueueService.deleteQueueMember(self.database, queue.id, member.id)
                     self.bot.reply_to(message, 'Ты вышел из этой очереди',
-                                      reply_markup=types.ReplyKeyboardRemove())
+                                      reply_markup=types.ReplyKeyboardRemove(selective=True))
             else:
                 self.bot.reply_to(message, 'Очереди по этому предмету еще нет. Самое время создать ее!',
-                                  reply_markup=types.ReplyKeyboardRemove())
+                                  reply_markup=types.ReplyKeyboardRemove(selective=True))
 
             

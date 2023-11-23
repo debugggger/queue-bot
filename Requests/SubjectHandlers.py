@@ -44,7 +44,7 @@ class SubjectHandlers(BaseHandler):
             if message.text in [s.title for s in SubjectService.getSubjects(self.database)]:
                 SubjectService.removeSubject(self.database, message.text)
                 self.bot.reply_to(message, 'Предмет удален',
-                                  reply_markup=types.ReplyKeyboardRemove())
+                                  reply_markup=types.ReplyKeyboardRemove(selective=True))
             else:
                 self.bot.reply_to(message, 'Такого предмета и так не было. Зачем удалять то...',
-                                  reply_markup=types.ReplyKeyboardRemove())
+                                  reply_markup=types.ReplyKeyboardRemove(selective=True))

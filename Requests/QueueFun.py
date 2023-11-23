@@ -121,23 +121,23 @@ class QueueFun(BaseHandler):
         # Обработка выбора очереди по команде /jointo
         if self.runtimeInfoManager.sendBarrier.checkAndRemove('jointo', message.from_user.id):
             if not message.text.startswith('Очередь по '):
-                self.bot.reply_to(message, 'Команда отменена', reply_markup=types.ReplyKeyboardRemove())
+                self.bot.reply_to(message, 'Команда отменена', reply_markup=types.ReplyKeyboardRemove(selective=True))
                 return
 
             subjectTitle = message.text.removeprefix('Очередь по ')
 
             if not SubjectService.isSubjectExist(self.database, subjectTitle):
-                self.bot.reply_to(message, 'Такого предмета не сущесвует', reply_markup=types.ReplyKeyboardRemove())
+                self.bot.reply_to(message, 'Такого предмета не сущесвует', reply_markup=types.ReplyKeyboardRemove(selective=True))
                 return
 
             subject: Subject = SubjectService.getSubjectByTitle(self.database, subjectTitle)
 
             if QueueService.isQueueExist(self.database, subject.id):
                 queue = QueueService.getQueueBySubjectId(self.database, subject.id)
-                self.bot.reply_to(message, "Выбрана очередь по " + subject.title + ":\n", reply_markup=types.ReplyKeyboardRemove())
+                self.bot.reply_to(message, "Выбрана очередь по " + subject.title + ":\n", reply_markup=types.ReplyKeyboardRemove(selective=True))
                 self.joinConnector(message, queue.id)
             else:
-                self.bot.reply_to(message, "Очередь по " + subject.title + " не существует.", reply_markup=types.ReplyKeyboardRemove())
+                self.bot.reply_to(message, "Очередь по " + subject.title + " не существует.", reply_markup=types.ReplyKeyboardRemove(selective=True))
 
             return
 
@@ -161,14 +161,14 @@ class QueueFun(BaseHandler):
         while place >= 1:
             if QueueService.isPlaceEmpty(self.database, place, self.joinList[message.from_user.id]):
                 QueueService.addToQueue(self.database, self.joinList[message.from_user.id], message.from_user.id, place, 2)
-                self.bot.reply_to(message, "Ты записан на " + str(place) + " место", reply_markup=types.ReplyKeyboardRemove())
+                self.bot.reply_to(message, "Ты записан на " + str(place) + " место", reply_markup=types.ReplyKeyboardRemove(selective=True))
                 self.joinList.pop(message.from_user.id)
                 break
             else:
                 place -= 1
 
     def joinCertain(self, message: types.Message):
-        self.bot.reply_to(message, "Введи место для записи", reply_markup=types.ReplyKeyboardRemove())
+        self.bot.reply_to(message, "Введи место для записи", reply_markup=types.ReplyKeyboardRemove(selective=True))
         self.joinCertainList[message.from_user.id] = self.joinList[message.from_user.id]
 
     def joinFirst(self, message: types.Message):
@@ -177,7 +177,7 @@ class QueueFun(BaseHandler):
         while place <= count:
             if QueueService.isPlaceEmpty(self.database, place, self.joinList[message.from_user.id]):
                 QueueService.addToQueue(self.database, self.joinList[message.from_user.id], message.from_user.id, place, 0)
-                self.bot.reply_to(message, "Ты записан на " + str(place) + " место", reply_markup=types.ReplyKeyboardRemove())
+                self.bot.reply_to(message, "Ты записан на " + str(place) + " место", reply_markup=types.ReplyKeyboardRemove(selective=True))
                 self.joinList.pop(message.from_user.id)
                 break
             else:
