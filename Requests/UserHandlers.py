@@ -9,7 +9,7 @@ from Requests.BaseHandler import BaseHandler
 
 class UserHandlers(BaseHandler):
     def memberCommand(self, message: telebot.types.Message) -> None:
-        markup = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True, selective=True).add("Ввод", "Отмена")
+        markup = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True, selective=True).add("Ввод", "❌ Отмена")
         self.bot.reply_to(message, "Для продолжения нажми кнопку ввод", reply_markup=markup)
         self.runtimeInfoManager.sendBarrier.add('member1', message.from_user.id)
 

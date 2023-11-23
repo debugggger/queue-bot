@@ -86,6 +86,7 @@ class QueueService:
 
         return queues
 
+    # TODO когда очередей вообще нет - эксепшн
     @staticmethod
     def getLastQueue(database) -> Queue:
         queue: Queue = Queue()

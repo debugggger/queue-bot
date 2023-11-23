@@ -20,7 +20,7 @@ class QueueFun(BaseHandler):
         if str(message.from_user.id) in members:
 
             markup = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True, selective=True)
-            markup.add('Отмена')
+            markup.add('❌ Отмена')
             for s in SubjectService.getSubjects(self.database):
                 if QueueService.isQueueExist(self.database, s.id):
                     markup.add(f'Очередь по {s.title}')
@@ -84,8 +84,7 @@ class QueueFun(BaseHandler):
 
                     QueueService.addToQueue(self.database, self.joinCertainList[message.from_user.id], message.from_user.id, num, 1)
                     if num != entryNum:
-                        self.bot.reply_to(message,
-                                              "Желаемое место уже занято. Ты записан на " + str(num) + " место")
+                        self.bot.reply_to(message, "Желаемое место уже занято. Ты записан на " + str(num) + " место")
                     else:
                         self.bot.reply_to(message, "Ты записан на " + str(num) + " место")
                     self.joinList.pop(message.from_user.id)
@@ -103,8 +102,7 @@ class QueueFun(BaseHandler):
                     if QueueService.isPlaceEmpty(self.database, num, self.joinCertainList[message.from_user.id]):
                         QueueService.addToQueue(self.database, self.joinCertainList[message.from_user.id], message.from_user.id, num, 1)
                         if num != entryNum:
-                            self.bot.reply_to(message,
-                                                  "Желаемое место уже занято. Ты записан на " + str(num) + " место")
+                            self.bot.reply_to(message, "Желаемое место уже занято. Ты записан на " + str(num) + " место")
                         else:
                             self.bot.reply_to(message, "Ты записан на " + str(num) + " место")
 

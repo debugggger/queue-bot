@@ -17,6 +17,7 @@ class SubjectHandlers(BaseHandler):
 
     def removesubjectCommand(self, message: telebot.types.Message) -> None:
         markup = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True, selective=True)
+        markup.add('❌ Отмена')
         for s in SubjectService.getSubjects(self.database):
             markup.add(s.title)
 
@@ -41,6 +42,11 @@ class SubjectHandlers(BaseHandler):
             self.bot.reply_to(message, f'Предмет {title} добавлен')
 
         if self.runtimeInfoManager.sendBarrier.checkAndRemove('removesubject', message.from_user.id):
+            if message.text == '❌ Отмена':
+                self.bot.reply_to(message, 'Команда отменена',
+                                  reply_markup=types.ReplyKeyboardRemove(selective=True))
+                return
+
             if message.text in [s.title for s in SubjectService.getSubjects(self.database)]:
                 SubjectService.removeSubject(self.database, message.text)
                 self.bot.reply_to(message, 'Предмет удален',

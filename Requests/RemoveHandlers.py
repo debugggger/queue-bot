@@ -14,7 +14,7 @@ class RemoveHandlers(BaseHandler):
             return
 
         markup = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True, selective=True)
-        markup.add('Отмена')
+        markup.add('❌ Отмена')
         for s in SubjectService.getSubjects(self.database):
             if QueueService.isQueueExist(self.database, s.id):
                 markup.add(f'Очередь по {s.title}')
