@@ -1,33 +1,32 @@
-
+import telebot
 from telebot import types
+from Entities.Subject import Subject
+from Requests.RuntimeInfoManager import RuntimeInfoManager
 
 from Services.MemberService import MemberService
 from Services.QueueService import QueueService
 from Services.SubjectService import SubjectService
+from Requests.BaseHandler import BaseHandler
+from db import Database
 
-class QueueFun():
-    def __init__(self, bot, botDB):
-        self.bot = bot
-        self.botDB = botDB
+class QueueFun(BaseHandler):
+    def __init__(self, bot: telebot.TeleBot, database: Database, runtimeInfoManager: RuntimeInfoManager):
+        BaseHandler.__init__(self, bot, database, runtimeInfoManager)
         self.joinCertainList = {}
         self.joinList = {}
 
-
     def jointoCommand(self, message):
-        members = [member.tgNum for member in MemberService.getMembers(self.botDB)]
+        members = [member.tgNum for member in MemberService.getMembers(self.database)]
         if str(message.from_user.id) in members:
-            markup = types.InlineKeyboardMarkup(row_width=3)
-            bt1 = types.InlineKeyboardButton("Отмена", callback_data="jointo_cancel")
-            markup.row(bt1)
 
-            subjects = SubjectService.getSubjects(self.botDB)
-            for i in range(len(subjects)):
-                if QueueService.isQueueExist(self.botDB, subjects[i].id):
+            markup = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True, selective=True)
+            markup.add('Отмена')
+            for s in SubjectService.getSubjects(self.database):
+                if QueueService.isQueueExist(self.database, s.id):
+                    markup.add(f'Очередь по {s.title}')
 
-                    btCur = types.InlineKeyboardButton("Очередь по " + subjects[i].title,
-                                                       callback_data="jointoNum_" + str(subjects[i].id))
-                    markup.row(btCur)
             self.bot.send_message(message.chat.id, "В какую очередь ты хочешь записаться?", reply_markup=markup)
+            self.runtimeInfoManager.sendBarrier.add('jointo', message.from_user.id)
         else:
             self.bot.send_message(message.chat.id, "Для использования этой команды тебе нужно записаться в списочек"
                                                    " членов закрытого клуба любителей очередей.")
@@ -42,20 +41,18 @@ class QueueFun():
 
     def joinConnector(self, message, queueId):
         if queueId == -1:
-            queueId = QueueService.getLastQueue(self.botDB).id
+            queueId = QueueService.getLastQueue(self.database).id
 
-        markup = types.InlineKeyboardMarkup(row_width=3)
-        bt1 = types.InlineKeyboardButton("Назад", callback_data="join_back")
-        bt2 = types.InlineKeyboardButton("Первое свободное", callback_data="join_first")
-        bt3 = types.InlineKeyboardButton("Определенное", callback_data="join_certain")
-        bt4 = types.InlineKeyboardButton("Последнее свободное", callback_data="join_last")
-        markup.row(bt1, bt2)
-        markup.row(bt3, bt4)
+        markup = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True, selective=True).add(
+            'Назад', 'Первое свободное', 'Определенное', 'Последнее свободное'
+        )
         self.bot.send_message(message.chat.id, "Выбери место для записи", reply_markup=markup)
 
         self.joinList[message.from_user.id] = queueId
 
-    def joinTextHandler(self, message):
+    def joinTextHandler(self, message: types.Message):
+
+        # Обработака ввода определенного места
         if message.from_user.id in self.joinCertainList:
             try:
                 entryNum = int(message.text)
@@ -119,57 +116,69 @@ class QueueFun():
             if num == 0 and message.from_user.id in self.joinCertainList:
                 self.bot.send_message(message.chat.id, "Слишком много желающих записаться, на тебя места не хватило:)")
 
-    def jointoCallback(self, callback):
-        numStr = callback.data.strip("jointoNum_")
-        numSubj = int(numStr)
+            return
 
-        subj = SubjectService.getSubjectById(self.botDB, numSubj)
+        # Обработка выбора очереди по команде /jointo
+        if self.runtimeInfoManager.sendBarrier.checkAndRemove('jointo', message.from_user.id):
+            if not message.text.startswith('Очередь по '):
+                self.bot.send_message(message.chat.id, 'Команда отменена', reply_markup=types.ReplyKeyboardRemove())
+                return
 
-        if QueueService.isQueueExist(self.botDB, subj.id):
-            queue = QueueService.getQueueBySubjectId(self.botDB, subj.id)
-            self.bot.send_message(callback.message.chat.id, "Выбрана очередь по " + subj.title + ":\n")
-            callback.message.from_user = callback.from_user
+            subjectTitle = message.text.removeprefix('Очередь по ')
 
-            self.joinConnector(callback.message, queue.id)
-        else:
-            self.bot.send_message(callback.message.chat.id, "Очередь по " + subj.title + " не существует.")
+            if not SubjectService.isSubjectExist(self.database, subjectTitle):
+                self.bot.send_message(message.chat.id, 'Такого предмета не сущесвует', reply_markup=types.ReplyKeyboardRemove())
+                return
 
+            subject: Subject = SubjectService.getSubjectByTitle(self.database, subjectTitle)
 
-    def joinLastCallback(self, callback):
-        if callback.from_user.id in self.joinList:
-            place = MemberService.getMembersCount(self.botDB)
-            while place >= 1:
+            if QueueService.isQueueExist(self.database, subject.id):
+                queue = QueueService.getQueueBySubjectId(self.database, subject.id)
+                self.bot.send_message(message.chat.id, "Выбрана очередь по " + subject.title + ":\n", reply_markup=types.ReplyKeyboardRemove())
+                self.joinConnector(message, queue.id)
+            else:
+                self.bot.send_message(message.chat.id, "Очередь по " + subject.title + " не существует.", reply_markup=types.ReplyKeyboardRemove())
 
-                if QueueService.isPlaceEmpty(self.botDB, place, self.joinList[callback.from_user.id]):
-                    QueueService.addToQueue(self.botDB, self.joinList[callback.from_user.id], callback.from_user.id, place, 2)
-                    self.bot.send_message(callback.message.chat.id, "Ты записан на " + str(place) + " место")
-                    self.joinList.pop(callback.from_user.id)
-                    break
-                else:
-                    place -= 1
+            return
 
+        # Выбор типа записи в очередь (первое свободное, и т.д.)
+        if message.from_user.id in self.joinList:
+            match message.text:
+                case 'Первое свободное':
+                    self.joinFirst(message)
+                case 'Определенное':
+                    self.joinCertain(message)
+                case 'Последнее свободное':
+                    self.joinLast(message)
+                case _:
+                    self.joinList.pop(message.from_user.id)
+                    self.jointoCommand(message)
 
-    def joinCertainCallback(self, callback):
-        if callback.from_user.id in self.joinList:
-            self.bot.send_message(callback.message.chat.id, "Введи место для записи")
-            self.joinCertainList[callback.from_user.id] = self.joinList[callback.from_user.id]
+            return
 
-    def joinFirstCallback(self, callback):
-        if callback.from_user.id in self.joinList:
+    def joinLast(self, message: types.Message):
+        place = MemberService.getMembersCount(self.database)
+        while place >= 1:
+            if QueueService.isPlaceEmpty(self.database, place, self.joinList[message.from_user.id]):
+                QueueService.addToQueue(self.database, self.joinList[message.from_user.id], message.from_user.id, place, 2)
+                self.bot.send_message(message.chat.id, "Ты записан на " + str(place) + " место", reply_markup=types.ReplyKeyboardRemove())
+                self.joinList.pop(message.from_user.id)
+                break
+            else:
+                place -= 1
 
-            count = MemberService.getMembersCount(self.botDB)
-            place = 1
-            while place <= count:
-                if QueueService.isPlaceEmpty(self.botDB, place, self.joinList[callback.from_user.id]):
-                    QueueService.addToQueue(self.botDB, self.joinList[callback.from_user.id], callback.from_user.id, place, 0)
-                    self.bot.send_message(callback.message.chat.id, "Ты записан на " + str(place) + " место")
-                    self.joinList.pop(callback.from_user.id)
-                    break
-                else:
-                    place += 1
+    def joinCertain(self, message: types.Message):
+        self.bot.send_message(message.chat.id, "Введи место для записи", reply_markup=types.ReplyKeyboardRemove())
+        self.joinCertainList[message.from_user.id] = self.joinList[message.from_user.id]
 
-    def joinBackCallback(self, callback):
-        if callback.from_user.id in self.joinList:
-            callback.message.from_user = callback.from_user
-            self.joinList.pop(callback.from_user.id)
-            self.jointoCommand(callback.message)
+    def joinFirst(self, message: types.Message):
+        count = MemberService.getMembersCount(self.database)
+        place = 1
+        while place <= count:
+            if QueueService.isPlaceEmpty(self.database, place, self.joinList[message.from_user.id]):
+                QueueService.addToQueue(self.database, self.joinList[message.from_user.id], message.from_user.id, place, 0)
+                self.bot.send_message(message.chat.id, "Ты записан на " + str(place) + " место", reply_markup=types.ReplyKeyboardRemove())
+                self.joinList.pop(message.from_user.id)
+                break
+            else:
+                place += 1
