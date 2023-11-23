@@ -28,23 +28,23 @@ class SubjectHandlers(BaseHandler):
             title: str = removeBlank(message.text)
             
             if not checkSubjectTitle(title):
-                self.bot.send_message(message.chat.id,
+                self.bot.reply_to(message,
                                       'Название предмета некорректно.\n'
                                       'Используйте не более 30 символов русского и английского алфавита.')
                 return
 
             if SubjectService.isSubjectExist(self.database, title):
-                self.bot.send_message(message.chat.id, f'Предмет {title} уже существует')
+                self.bot.reply_to(message, f'Предмет {title} уже существует')
                 return
 
             SubjectService.addSubject(self.database, title)
-            self.bot.send_message(message.chat.id, f'Предмет {title} добавлен')
+            self.bot.reply_to(message, f'Предмет {title} добавлен')
 
         if self.runtimeInfoManager.sendBarrier.checkAndRemove('removesubject', message.from_user.id):
             if message.text in [s.title for s in SubjectService.getSubjects(self.database)]:
                 SubjectService.removeSubject(self.database, message.text)
                 self.bot.reply_to(message, 'Предмет удален',
-                                  reply_markup=types.ReplyKeyboardRemove())
+                                  reply_markup=types.ReplyKeyboardRemove(selective=True))
             else:
                 self.bot.reply_to(message, 'Такого предмета и так не было. Зачем удалять то...',
-                                  reply_markup=types.ReplyKeyboardRemove())
+                                  reply_markup=types.ReplyKeyboardRemove(selective=True))

@@ -45,3 +45,10 @@ class MemberService:
             cur.execute("select * from members where id_member=%s", (str(id),))
             result = cur.fetchall()[0]
             return Member(*result)
+
+
+    def isMemberExistByTgNum(database, tgNum: int) -> bool:
+        with database.connection.cursor() as cur:
+            cur.execute("select count(id_member) from members where tg_num=%s", (str(tgNum),))
+            count = cur.fetchall()[0][0]
+        return count != 0

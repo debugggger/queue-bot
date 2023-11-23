@@ -20,7 +20,7 @@ class QueueEntity(BaseHandler):
         for i in range(len(subjects)):
             btCur = types.InlineKeyboardButton(str(subjects[i]), callback_data="createNum_" + str(i))
             markup.row(btCur)
-        self.bot.send_message(message.chat.id, "По какому предмету ты хочешь создать очередь?", reply_markup=markup)
+        self.bot.reply_to(message, "По какому предмету ты хочешь создать очередь?", reply_markup=markup)
 
     def deleteCommand(self, message):
         markup = types.InlineKeyboardMarkup(row_width=3)
@@ -31,7 +31,7 @@ class QueueEntity(BaseHandler):
         for i in range(len(subjects)):
             btCur = types.InlineKeyboardButton(str(subjects[i]), callback_data="deleteNum_" + str(i))
             markup.row(btCur)
-        self.bot.send_message(message.chat.id, "По какому предмету ты хочешь удалить очередь?", reply_markup=markup)
+        self.bot.reply_to(message, "По какому предмету ты хочешь удалить очередь?", reply_markup=markup)
 
 
     def createCallback(self, callback):
@@ -86,6 +86,6 @@ class QueueEntity(BaseHandler):
                 for q in sortedQ:
                     resStr += str(q) + sortedQ[q]
 
-                self.bot.send_message(message.chat.id, "Очередь по " + title + ":\n" + resStr)
+                self.bot.reply_to(message, "Очередь по " + title + ":\n" + resStr)
             elif title != "Отмена":
-                self.bot.send_message(message.chat.id, "Очереди по такому предмету нет")
+                self.bot.reply_to(message, "Очереди по такому предмету нет")

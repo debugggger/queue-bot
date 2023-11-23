@@ -28,6 +28,13 @@ class SubjectService:
 
         return subj
 
+    def getSubjectByTitle(database, title) -> Subject:
+        with database.connection.cursor() as cur:
+            cur.execute("select * from subjects where title=%s", (title,))
+            result = cur.fetchall()[0]
+            return Subject(*result)
+
+
     @staticmethod
     def getSubjectByTitle(database, title) -> Subject:
         subj: Subject = Subject()
