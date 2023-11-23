@@ -12,7 +12,6 @@ from db import Database
 class QueueFun(BaseHandler):
     def __init__(self, bot: telebot.TeleBot, database: Database, runtimeInfoManager: RuntimeInfoManager):
         BaseHandler.__init__(self, bot, database, runtimeInfoManager)
-        self.joinCertainList = {}
         self.joinList = {}
 
     def jointoCommand(self, message):
@@ -46,6 +45,7 @@ class QueueFun(BaseHandler):
         if queueId == -1:
             queueId = QueueService.getLastQueue(self.database).id
 
+        self.runtimeInfoManager.sendBarrier.add('join', message.from_user.id)
         markup = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True, selective=True).add(
             'Назад', 'Первое свободное', 'Определенное', 'Последнее свободное'
         )
@@ -56,7 +56,7 @@ class QueueFun(BaseHandler):
     def joinTextHandler(self, message: types.Message):
 
         # Обработака ввода определенного места
-        if message.from_user.id in self.joinCertainList:
+        if self.runtimeInfoManager.sendBarrier.checkAndRemove('joinCertain', message.from_user.id):
             try:
                 entryNum = int(message.text)
                 if entryNum <= 0:
@@ -72,50 +72,49 @@ class QueueFun(BaseHandler):
             else:
                 num = entryNum
 
-            if QueueService.isPlaceEmpty(self.database, num, self.joinCertainList[message.from_user.id]) == False:
-                if QueueService.getMemberInQueueByPlace(self.database, self.joinCertainList[message.from_user.id], num).memberId \
+            if QueueService.isPlaceEmpty(self.database, num, self.joinList[message.from_user.id]) == False:
+                if QueueService.getMemberInQueueByPlace(self.database, self.joinList[message.from_user.id], num).memberId \
                         == MemberService.getMemberByTgNum(self.database, message.from_user.id).id:
                     self.bot.reply_to(message,
                                           "Ты уже записан на желаемое место")
                     self.joinList.pop(message.from_user.id)
-                    self.joinCertainList.pop(message.from_user.id)
                     return
 
             while num <= count:
 
-                if QueueService.isPlaceEmpty(self.database, num, self.joinCertainList[message.from_user.id]):
+                if QueueService.isPlaceEmpty(self.database, num, self.joinList[message.from_user.id]):
 
-                    QueueService.addToQueue(self.database, self.joinCertainList[message.from_user.id], message.from_user.id, num, 1)
+                    QueueService.addToQueue(self.database, self.joinList[message.from_user.id], message.from_user.id, num, 1)
                     if num != entryNum:
                         self.bot.reply_to(message, "Желаемое место уже занято. Ты записан на " + str(num) + " место")
                     else:
                         self.bot.reply_to(message, "Ты записан на " + str(num) + " место")
                     self.joinList.pop(message.from_user.id)
-                    self.joinCertainList.pop(message.from_user.id)
                     break
                 else:
                     num += 1
 
-            if num >= count and message.from_user.id in self.joinCertainList:
+            if num >= count and message.from_user.id in self.joinList:
                 if (count < entryNum):
                     num = count
                 else:
                     num = entryNum
                 while num >= 1:
-                    if QueueService.isPlaceEmpty(self.database, num, self.joinCertainList[message.from_user.id]):
-                        QueueService.addToQueue(self.database, self.joinCertainList[message.from_user.id], message.from_user.id, num, 1)
+                    if QueueService.isPlaceEmpty(self.database, num, self.joinList[message.from_user.id]):
+                        QueueService.addToQueue(self.database, self.joinList[message.from_user.id], message.from_user.id, num, 1)
                         if num != entryNum:
                             self.bot.reply_to(message, "Желаемое место уже занято. Ты записан на " + str(num) + " место")
                         else:
                             self.bot.reply_to(message, "Ты записан на " + str(num) + " место")
 
                         self.joinList.pop(message.from_user.id)
-                        self.joinCertainList.pop(message.from_user.id)
                         break
                     else:
                         num -= 1
-            if num == 0 and message.from_user.id in self.joinCertainList:
-                self.bot.reply_to(message, "Слишком много желающих записаться, на тебя места не хватило:)")
+            if num == 0 and message.from_user.id in self.joinList:
+                self.joinList.pop(message.from_user.id)
+                self.bot.reply_to(message, "Ты уже записан в эту очередь, свободных мест для записи нет. "
+                                           "Для смены места воспользуйся командой /replace")
 
             return
 
@@ -143,7 +142,7 @@ class QueueFun(BaseHandler):
             return
 
         # Выбор типа записи в очередь (первое свободное, и т.д.)
-        if message.from_user.id in self.joinList:
+        if self.runtimeInfoManager.sendBarrier.checkAndRemove('join', message.from_user.id):
             match message.text:
                 case 'Первое свободное':
                     self.joinFirst(message)
@@ -167,10 +166,14 @@ class QueueFun(BaseHandler):
                 break
             else:
                 place -= 1
+        if place == 0 and message.from_user.id in self.joinList:
+            self.joinList.pop(message.from_user.id)
+            self.bot.reply_to(message, "Ты уже записан в эту очередь, свободных мест для записи нет. "
+                                       "Для смены места воспользуйся командой /replace")
 
     def joinCertain(self, message: types.Message):
         self.bot.reply_to(message, "Введи место для записи", reply_markup=types.ReplyKeyboardRemove(selective=True))
-        self.joinCertainList[message.from_user.id] = self.joinList[message.from_user.id]
+        self.runtimeInfoManager.sendBarrier.add('joinCertain', message.from_user.id)
 
     def joinFirst(self, message: types.Message):
         count = MemberService.getMembersCount(self.database)
@@ -183,3 +186,7 @@ class QueueFun(BaseHandler):
                 break
             else:
                 place += 1
+        if place > count and message.from_user.id in self.joinList:
+            self.joinList.pop(message.from_user.id)
+            self.bot.reply_to(message, "Ты уже записан в эту очередь, свободных мест для записи нет. "
+                                       "Для смены места воспользуйся командой /replace")
