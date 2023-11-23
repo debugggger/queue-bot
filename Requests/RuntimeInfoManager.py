@@ -19,6 +19,9 @@ class SendBarrier:
             return False
         return tgId in self.data[key]
 
+    def remove(self, key: str, tgId: int) -> None:
+        self.data[key].remove(tgId)
+
     def checkAndRemove(self, key: str, tgId: int) -> bool:
         if not self.check(key, tgId):
             return False
