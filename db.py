@@ -32,18 +32,6 @@ class Database:
                         "subjects.id_subject where subjects.title=%s",
                         title)
 
-    def createQueue(self, subject_id: int) -> None:
-        with self.connection.cursor() as cur:
-            cur.execute("update queuesubjects set is_last = false where is_last is not null; "
-                        "insert into queuesubjects (subject_id, is_last) values (%s, true) ",
-                        str(subject_id))
-
-    def deleteQueue(self, id_queue: int) -> None:
-        with self.connection.cursor() as cur:
-            cur.execute("delete from queuesubjects where id_queue=%s",
-                        (str(id_queue)))
-
-
     def close(self):
         self.connection.close()
         print("[INFO] Close connection with DB")

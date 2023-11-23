@@ -15,17 +15,30 @@ class QueueService:
             count = cur.fetchall()[0][0]
         return count != 0
 
+    @staticmethod
     def isMemberInQueue(database, queueId: int, memberId: int) -> bool:
         with database.connection.cursor() as cur:
             cur.execute("select count(queue_id) from queuemembers where queue_id=%s and member_id=%s", (queueId, memberId))
             count = cur.fetchall()[0][0]
         return count != 0
 
+    @staticmethod
     def deleteQueueMember(database, queueId: int, memberId: int) -> None:
         with database.connection.cursor() as cur:
             cur.execute("delete from queuemembers where queue_id=%s and member_id=%s",
                         (queueId, memberId))
 
+    @staticmethod
+    def createQueue(database, subject_id: int) -> None:
+        with database.connection.cursor() as cur:
+            cur.execute("update queuesubjects set is_last = false where is_last is not null; "
+                        "insert into queuesubjects (subject_id, is_last) values (%s, true) ",
+                        (subject_id,))
+
+    @staticmethod
+    def deleteQueue(database, id_queue: int) -> None:
+        with database.connection.cursor() as cur:
+            cur.execute("delete from queuesubjects where id_queue=%s", (id_queue,))
 
     @staticmethod
     def getMembersInQueue(database, queueId: int) -> List[QueueMember]:
