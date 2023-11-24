@@ -2,6 +2,9 @@ import datetime
 from typing import List, Dict
 
 
+import telebot
+
+
 # Класс, позволяющий выполнять операции в несколько этапов.
 # Можно отслеживать, что вторую часть команды выполнил пользователь, который выполнил и первую часть.
 class SendBarrier:
@@ -83,4 +86,4 @@ class RuntimeInfoManager:
         self.timeoutManager: TimeoutManager = TimeoutManager({
             'show': datetime.timedelta(seconds=10),
         })
-        
+        self.lastQueueMessages: Dict[str, telebot.types.Message] = {}

@@ -1,17 +1,19 @@
 from datetime import datetime
 from typing import List
 
+from Entities.Member import Member
+from Entities.Subject import Subject
+
 class QueueMember:
-    def __init__(self, memberId: int = 0, entryTime: datetime = '', placeNumber: int=0, entryType: str=''):
-        self.memberId: int = memberId
+    def __init__(self, member: Member, entryTime: datetime, placeNumber: int, entryType: str):
+        self.member: Member = member
         self.entryTime: datetime = entryTime
         self.placeNumber: int = placeNumber
         self.entryType: str = entryType
 
 class Queue:
-    
-    def __init__(self, id: int = 0, subjectId: int = 0, isLast: bool = False):
+    def __init__(self, id: int, subject: Subject, isLast: bool, members: List[QueueMember]):
         self.id : int = id
-        self.subjectId: int = subjectId
+        self.subject: Subject = subject
         self.isLast: bool = isLast
-        self.members: List[QueueMember] = []
+        self.members: List[QueueMember] = members

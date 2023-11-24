@@ -8,7 +8,7 @@ from Requests.RuntimeInfoManager import RuntimeInfoManager
 from Services.MemberService import MemberService
 from Services.QueueService import QueueService
 from Services.SubjectService import SubjectService
-from utils import removeBlank, checkSubjectTitle
+from utils import formQueueText, removeBlank, checkSubjectTitle
 
 
 class QueueEntity(BaseHandler):
@@ -98,19 +98,12 @@ class QueueEntity(BaseHandler):
                                       str(self.runtimeInfoManager.timeoutManager.getTimeout('show')) + ' секунд')
                     return
 
-                qList = {}
                 subj = SubjectService.getSubjectByTitle(self.database, title)
                 queue = QueueService.getQueueBySubjectId(self.database, subj.id)
-                for member in queue.members:
-                    val =  " - " + str(MemberService.getMemberById(self.database, member.memberId).name) + "\n"
+                queueText = formQueueText(queue)
 
-                    qList [member.placeNumber] = val
+                msg = self.bot.reply_to(message, queueText)
+                self.runtimeInfoManager.lastQueueMessages[title] = msg
 
-                sortedQ = {k: v for k, v in sorted(qList.items())}
-                resStr = ''
-                for q in sortedQ:
-                    resStr += str(q) + sortedQ[q]
-
-                self.bot.reply_to(message, "Очередь по " + title + ":\n" + resStr)
             else:
                 self.bot.reply_to(message, "Очереди по такому предмету нет")
