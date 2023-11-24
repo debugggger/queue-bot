@@ -23,7 +23,6 @@ class RemoveHandlers(BaseHandler):
         self.bot.reply_to(message, 'Из какой очереди ты хочешь выйти', reply_markup=markup)
         self.runtimeInfoManager.sendBarrier.add('removefrom', message.from_user.id)
 
-    # TODO: переименовать
     def removefromTextHandler(self, message: telebot.types.Message):
         if self.runtimeInfoManager.sendBarrier.checkAndRemove('removefrom', message.from_user.id):
             if not message.text.startswith('Очередь по '):
