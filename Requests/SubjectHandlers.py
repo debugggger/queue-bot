@@ -4,6 +4,7 @@ import telebot
 from telebot import types
 
 from Requests.BaseHandler import BaseHandler
+from Services.QueueService import QueueService
 from Services.SubjectService import SubjectService
 from db import Database
 from Entities.Subject import Subject
@@ -47,10 +48,17 @@ class SubjectHandlers(BaseHandler):
                                   reply_markup=types.ReplyKeyboardRemove(selective=True))
                 return
 
-            if message.text in [s.title for s in SubjectService.getSubjects(self.database)]:
-                SubjectService.removeSubject(self.database, message.text)
-                self.bot.reply_to(message, 'Предмет удален',
-                                  reply_markup=types.ReplyKeyboardRemove(selective=True))
-            else:
+            subjectTitle = message.text
+            if not SubjectService.isSubjectExist(self.database, subjectTitle):
                 self.bot.reply_to(message, 'Такого предмета и так не было. Зачем удалять то...',
                                   reply_markup=types.ReplyKeyboardRemove(selective=True))
+
+            subject = SubjectService.getSubjectByTitle(self.database, subjectTitle)
+            if QueueService.isQueueExist(self.database, subject.id):
+                self.bot.reply_to(message, 'По этому предмету есть активная очередь, его пока нельзя удалить :(',
+                                    reply_markup=types.ReplyKeyboardRemove(selective=True))
+                return
+
+            SubjectService.removeSubject(self.database, subjectTitle)
+            self.bot.reply_to(message, 'Предмет удален',
+                                reply_markup=types.ReplyKeyboardRemove(selective=True))
