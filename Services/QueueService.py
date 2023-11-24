@@ -87,6 +87,16 @@ class QueueService:
                          QueueService.getMembersInQueue(database, result[0]))
 
     @staticmethod
+    def getQueueById(database, id: int) -> Queue:
+        with database.connection.cursor() as cur:
+            cur.execute("select * from queuesubjects where id_queue=%s", (id,))
+            result = cur.fetchall()[0]
+            return Queue(result[0],
+                         SubjectService.getSubjectById(database, result[1]),
+                         result[2],
+                         QueueService.getMembersInQueue(database, result[0]))
+
+    @staticmethod
     def getQueues(database) -> List[Queue]:
         queues : List[Queue] = []
         with database.connection.cursor() as cur:

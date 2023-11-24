@@ -4,6 +4,8 @@ import time
 import telebot
 
 from Entities.Queue import Queue
+from Requests.RuntimeInfoManager import RuntimeInfoManager
+from Services.QueueService import QueueService
 
 
 def removeBlank(string: str) -> str:
@@ -34,3 +36,17 @@ def formQueueText(queue: Queue):
         resStr += str(q) + sortedQ[q]
 
     return "Очередь по " + queue.subject.title + ":\n" + resStr
+
+def updateLastQueueText(bot: telebot.TeleBot, database, queueId: int, runtimeInfoManager: RuntimeInfoManager):
+    queue = QueueService.getQueueById(database, queueId)
+
+    if queue.subject.title not in runtimeInfoManager.lastQueueMessages:
+        return
+
+    msg = runtimeInfoManager.lastQueueMessages[queue.subject.title]
+    msgNewText = formQueueText(queue)
+    
+    if msgNewText == msg.text:
+        return
+
+    bot.edit_message_text(msgNewText, msg.chat.id, msg.id)

@@ -102,6 +102,8 @@ class QueueEntity(BaseHandler):
                 queue = QueueService.getQueueBySubjectId(self.database, subj.id)
                 queueText = formQueueText(queue)
 
-                self.bot.reply_to(message, queueText)
+                msg = self.bot.reply_to(message, queueText)
+                self.runtimeInfoManager.lastQueueMessages[title] = msg
+
             else:
                 self.bot.reply_to(message, "Очереди по такому предмету нет")

@@ -8,6 +8,7 @@ from Services.QueueService import QueueService
 from Services.SubjectService import SubjectService
 from Requests.BaseHandler import BaseHandler
 from db import Database
+from utils import formQueueText, updateLastQueueText
 
 class QueueFun(BaseHandler):
     def __init__(self, bot: telebot.TeleBot, database: Database, runtimeInfoManager: RuntimeInfoManager):
@@ -75,8 +76,7 @@ class QueueFun(BaseHandler):
             if QueueService.isPlaceEmpty(self.database, num, self.joinList[message.from_user.id]) == False:
                 if QueueService.getMemberInQueueByPlace(self.database, self.joinList[message.from_user.id], num).memberId \
                         == MemberService.getMemberByTgNum(self.database, message.from_user.id).id:
-                    self.bot.reply_to(message,
-                                          "Ты уже записан на желаемое место")
+                    self.bot.reply_to(message, "Ты уже записан на желаемое место")
                     self.joinList.pop(message.from_user.id)
                     return
 
@@ -89,6 +89,7 @@ class QueueFun(BaseHandler):
                         self.bot.reply_to(message, "Желаемое место уже занято. Ты записан на " + str(num) + " место")
                     else:
                         self.bot.reply_to(message, "Ты записан на " + str(num) + " место")
+                    updateLastQueueText(self.bot, self.database, self.joinList[message.from_user.id], self.runtimeInfoManager)
                     self.joinList.pop(message.from_user.id)
                     break
                 else:
@@ -106,7 +107,7 @@ class QueueFun(BaseHandler):
                             self.bot.reply_to(message, "Желаемое место уже занято. Ты записан на " + str(num) + " место")
                         else:
                             self.bot.reply_to(message, "Ты записан на " + str(num) + " место")
-
+                        updateLastQueueText(self.bot, self.database, self.joinList[message.from_user.id], self.runtimeInfoManager)
                         self.joinList.pop(message.from_user.id)
                         break
                     else:
@@ -162,6 +163,7 @@ class QueueFun(BaseHandler):
             if QueueService.isPlaceEmpty(self.database, place, self.joinList[message.from_user.id]):
                 QueueService.addToQueue(self.database, self.joinList[message.from_user.id], message.from_user.id, place, 2)
                 self.bot.reply_to(message, "Ты записан на " + str(place) + " место", reply_markup=types.ReplyKeyboardRemove(selective=True))
+                updateLastQueueText(self.bot, self.database, self.joinList[message.from_user.id], self.runtimeInfoManager)
                 self.joinList.pop(message.from_user.id)
                 break
             else:
@@ -182,6 +184,7 @@ class QueueFun(BaseHandler):
             if QueueService.isPlaceEmpty(self.database, place, self.joinList[message.from_user.id]):
                 QueueService.addToQueue(self.database, self.joinList[message.from_user.id], message.from_user.id, place, 0)
                 self.bot.reply_to(message, "Ты записан на " + str(place) + " место", reply_markup=types.ReplyKeyboardRemove(selective=True))
+                updateLastQueueText(self.bot, self.database, self.joinList[message.from_user.id], self.runtimeInfoManager)
                 self.joinList.pop(message.from_user.id)
                 break
             else:
