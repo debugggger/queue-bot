@@ -4,6 +4,7 @@ from typing import List
 from Entities import Member
 from Entities.Queue import QueueMember, Queue
 from Services.MemberService import MemberService
+from Services.SubjectService import SubjectService
 
 
 class QueueService:
@@ -52,21 +53,17 @@ class QueueService:
         with database.connection.cursor() as cur:
             cur.execute("select * from queuemembers where queue_id=%s", (queueId,))
             for r in cur.fetchall():
-                queueMembers.append(QueueMember(*r[1:]))
+                member = MemberService.getMemberById(database, r[1])
+                queueMembers.append(QueueMember(member, *r[2:]))
         return queueMembers
 
     @staticmethod
     def getMemberInQueueByPlace(database, queueId, place) -> QueueMember:
-        queueMember : QueueMember = QueueMember()
         with database.connection.cursor() as cur:
             cur.execute("select * from queuemembers where queue_id = " + str(queueId) + " and place_number = " + str(place))
             result = cur.fetchall()[0]
-            queueMember.memberId = result[1]
-            queueMember.entryTime = result[2]
-            queueMember.placeNumber = result[3]
-            queueMember.entryType = result[4]
-
-        return queueMember
+            member = MemberService.getMemberById(database, result[1])
+            return  QueueMember(member, *result[2:])
 
     @staticmethod
     def isPlaceEmpty(database, num, queueId) -> bool:
@@ -81,16 +78,13 @@ class QueueService:
 
     @staticmethod
     def getQueueBySubjectId(database, subjectId: int) -> Queue:
-        queue : Queue = Queue()
         with database.connection.cursor() as cur:
             cur.execute("select * from queuesubjects where subject_id=%s", (subjectId,))
             result = cur.fetchall()[0]
-            queue.id = result[0]
-            queue.subjectId = result[1]
-            queue.isLast = result[2]
-        queue.members = QueueService.getMembersInQueue(database, queue.id)
-
-        return queue
+            return Queue(result[0],
+                         SubjectService.getSubjectById(database, result[1]),
+                         result[2],
+                         QueueService.getMembersInQueue(database, result[0]))
 
     @staticmethod
     def getQueues(database) -> List[Queue]:
@@ -98,7 +92,10 @@ class QueueService:
         with database.connection.cursor() as cur:
             cur.execute("select * from queuesubjects")
             for r in cur.fetchall():
-                queues.append(Queue(*r))
+                queues.append(Queue(r[0],
+                         SubjectService.getSubjectById(database, r[1]),
+                         r[2],
+                         QueueService.getMembersInQueue(database, r[0])))
 
         for q in queues:
             q.members = QueueService.getMembersInQueue(database, q.id)
@@ -107,16 +104,13 @@ class QueueService:
 
     @staticmethod
     def getLastQueue(database) -> Queue:
-        queue: Queue = Queue()
         with database.connection.cursor() as cur:
             cur.execute("select * from queuesubjects where is_last=true")
             result = cur.fetchall()[0]
-            queue.id = result[0]
-            queue.subjectId = result[1]
-            queue.isLast = result[2]
-        queue.members = QueueService.getMembersInQueue(database, queue.id)
-
-        return queue
+            return Queue(result[0],
+                         SubjectService.getSubjectById(database, result[1]),
+                         result[2],
+                         QueueService.getMembersInQueue(database, result[0]))
 
     @staticmethod
     def addToQueue(database, queue_id: int, tg_num: int, place: int, entry_type: int) -> None:
