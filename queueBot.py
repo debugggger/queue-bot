@@ -116,7 +116,7 @@ textHandlers: List[Callable[[telebot.types.Message], None]] = {
     userHandlers.setNameTextHandler,
     qFun.joinTextHandler,
     qEntity.queueTextHandler,
-    removeHandlers.removeSubjectTextHandler,
+    removeHandlers.removefromTextHandler,
 }
 
 @bot.message_handler(commands=['debug_chatid'])
