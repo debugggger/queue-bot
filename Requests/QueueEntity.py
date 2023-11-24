@@ -1,3 +1,4 @@
+import datetime
 import telebot
 from telebot import types
 from Entities.Subject import Subject
@@ -92,6 +93,11 @@ class QueueEntity(BaseHandler):
                 return
 
             if SubjectService.isSubjectExist(self.database, title):
+
+                if not self.runtimeInfoManager.timeoutManager.checkAndUpdate('show', title, datetime.datetime.now()):
+                    self.bot.reply_to(message, 'Очереди можно смотерть не чаще, чем раз в ' +
+                                      str(self.runtimeInfoManager.timeoutManager.getTimeout('show')) + ' секунд')
+                    return
 
                 qList = {}
                 subj = SubjectService.getSubjectByTitle(self.database, title)
