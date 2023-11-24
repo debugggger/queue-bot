@@ -14,6 +14,7 @@ from Requests.QueueFun import QueueFun
 from Requests.SubjectHandlers import SubjectHandlers
 from Requests.UserHandlers import UserHandlers
 from Requests.RuntimeInfoManager import RuntimeInfoManager
+from utils import checkMessage
 
 load_dotenv()
 
@@ -62,10 +63,6 @@ def startCommand(message):
                      "командами, чтобы более подробно узнать что я умею:",
                      reply_markup=markup)
 
-def deleteMessage(message: telebot.types.Message):
-    bot.delete_message(message.chat.id, message.id)
-
-
 commandHandlers: Dict[str, Callable[[telebot.types.Message], None]] = {
     '/start': startCommand,
     '/help': commandsList,
@@ -92,8 +89,6 @@ commandHandlers: Dict[str, Callable[[telebot.types.Message], None]] = {
 }
 
 callbackHandlers: Dict[str, Callable[[telebot.types.CallbackQuery], None]] = {
-    'showNum_': qEntity.showCallback,
-
     'help_member': lambda c: userHandlers.memberCommand(c.message),
     'help_show': lambda c: qEntity.showCommand(c.message),
     'help_delete': lambda c: qEntity.deleteCommand(c.message),
@@ -102,13 +97,6 @@ callbackHandlers: Dict[str, Callable[[telebot.types.CallbackQuery], None]] = {
     'help_jointo': lambda c: qFun.jointoCommand(c.message),
     'commands': lambda c: commandsList(c.message),
     'possibility': lambda c: possibilityCommand(c.message),
-
-    'member_cancel': lambda c: deleteMessage(c.message),
-    'show_cancel': lambda c: deleteMessage(c.message),
-    'create_cancel': lambda c: deleteMessage(c.message),
-    'delete_cancel': lambda c: deleteMessage(c.message),
-    'jointo_cancel': lambda c: deleteMessage(c.message),
-
 }
 
 textHandlers: List[Callable[[telebot.types.Message], None]] = {
@@ -121,7 +109,7 @@ textHandlers: List[Callable[[telebot.types.Message], None]] = {
 
 @bot.message_handler(commands=['debug_chatid'])
 def commandsHandler(message: telebot.types.Message):
-    if time.time() - message.date > 3:
+    if not checkMessage(message):
         return
 
     bot.send_message(message.chat.id, f'chat_id = {message.chat.id}')
@@ -129,38 +117,34 @@ def commandsHandler(message: telebot.types.Message):
 
 @bot.message_handler(func=lambda message: message.text.startswith('/'))
 def commandsHandler(message: telebot.types.Message):
-    if time.time() - message.date > 3:
+    if not checkMessage(message, chatId):
         return
-    if chatId and (message.chat.id != chatId):
-        return
+
     if message.text in commandHandlers.keys():
         commandHandlers[message.text](message)
 
 @bot.callback_query_handler(func = lambda callback: True)
 def callback_message(callback: telebot.types.CallbackQuery):
-    if time.time() - callback.message.date > 3:
+    if not checkMessage(callback.message, chatId):
         return
-    if chatId and (callback.message.chat.id != chatId):
-        return
+
     for key, handler in callbackHandlers.items():
         if callback.data.startswith(key):
             handler(callback)
 
 @bot.message_handler(func=lambda message: not message.text.startswith('/'))
 def handle_text(message: telebot.types.Message):
-    if time.time() - message.date > 3:
+    if not checkMessage(message, chatId):
         return
-    if chatId and (message.chat.id != chatId):
-        return
+
     for textHandler in textHandlers:
         textHandler(message)
 
 @bot.message_handler(content_types=['left_chat_member'])
 def handle_left_chat_member(message: telebot.types.Message):
-    if time.time() - message.date > 3:
+    if not checkMessage(message, chatId):
         return
-    if chatId and (message.chat.id != chatId):
-        return
+
     user_id = message.left_chat_member.id
     chat_id = message.chat.id
     bot.send_message(chat_id, f"Пользователь с ID {user_id} покинул чат.")

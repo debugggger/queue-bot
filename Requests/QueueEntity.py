@@ -30,12 +30,6 @@ class QueueEntity(BaseHandler):
         self.bot.reply_to(message, "По какому предмету ты хочешь удалить очередь?", reply_markup=markup)
         self.runtimeInfoManager.sendBarrier.add('delete', message.from_user.id)
 
-    def showCallback(self, callback):
-        numStr = callback.data.strip("showNum_")
-        numSubj = int(numStr)
-        subjects = SubjectService.getSubjectById(self.database, numSubj)
-        self.bot.send_message(callback.message.chat.id, "Очередь по " + subjects.title + ":\n")
-
     def showCommand(self, message):
         markup = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True, selective=True)
         subjects = SubjectService.getSubjects(self.database)
@@ -85,7 +79,7 @@ class QueueEntity(BaseHandler):
             else:
                 self.bot.reply_to(message, "Очередь по " + subject.title + " не существует.", reply_markup=types.ReplyKeyboardRemove(selective=True))
 
-        if self.runtimeInfoManager.sendBarrier.check('show', message.from_user.id):
+        if self.runtimeInfoManager.sendBarrier.checkAndRemove('show', message.from_user.id):
             title: str = removeBlank(message.text)
             if title == "❌ Отмена":
                 self.bot.reply_to(message, 'Команда отменена',
