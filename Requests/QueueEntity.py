@@ -21,7 +21,12 @@ class QueueEntity(BaseHandler):
         self.bot.reply_to(message, "По какому предмету ты хочешь создать очередь?", reply_markup=markup)
         self.runtimeInfoManager.sendBarrier.add('create', message.from_user.id)
 
-    def deleteCommand(self, message):
+    def deleteCommand(self, message: telebot.types.Message):
+        chatMember: telebot.types.ChatMember = self.bot.get_chat_member(message.chat.id, message.from_user.id)
+        if chatMember.status not in ['creator', 'administrator']:
+            self.bot.reply_to(message, 'Эту команду могут выполнять только администраторы')
+            return
+
         markup = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True, selective=True)
         markup.add('❌ Отмена')
         for s in SubjectService.getSubjects(self.database):
@@ -30,7 +35,7 @@ class QueueEntity(BaseHandler):
         self.bot.reply_to(message, "По какому предмету ты хочешь удалить очередь?", reply_markup=markup)
         self.runtimeInfoManager.sendBarrier.add('delete', message.from_user.id)
 
-    def showCommand(self, message):
+    def showCommand(self, message: telebot.types.Message):
         markup = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True, selective=True)
         subjects = SubjectService.getSubjects(self.database)
         markup.add('❌ Отмена')

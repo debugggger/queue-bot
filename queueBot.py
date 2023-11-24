@@ -6,6 +6,8 @@ import telebot
 from telebot import types
 from dotenv import load_dotenv
 from Requests.RemoveHandlers import RemoveHandlers
+from Services.MemberService import MemberService
+from Services.QueueService import QueueService
 
 from db import Database
 
@@ -145,9 +147,14 @@ def handle_left_chat_member(message: telebot.types.Message):
     if not checkMessage(message, chatId):
         return
 
-    user_id = message.left_chat_member.id
-    chat_id = message.chat.id
-    bot.send_message(chat_id, f"Пользователь с ID {user_id} покинул чат.")
+    bot.send_message(message.chat.id, f"Пользователь с ID {message.left_chat_member.id} покинул чат.")
 
+    if not MemberService.isMemberExistByTgNum(botDB, message.left_chat_member.id):
+        return
+
+    member = MemberService.getMemberByTgNum(botDB, message.left_chat_member.id)
+    QueueService.deleteMemberFromAllQueues(botDB, member.id)
+    # TODO: отклонить все запросы на смену мест
+    MemberService.deleteMember(botDB, message.left_chat_member.id)
 
 bot.infinity_polling()

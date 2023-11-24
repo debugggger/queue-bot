@@ -23,6 +23,12 @@ class QueueService:
         return count != 0
 
     @staticmethod
+    def deleteMemberFromAllQueues(database, memberId: int) -> None:
+        with database.connection.cursor() as cur:
+            cur.execute("delete from queuemembers where member_id=%s",
+                        (memberId,))
+
+    @staticmethod
     def deleteQueueMember(database, queueId: int, memberId: int) -> None:
         with database.connection.cursor() as cur:
             cur.execute("delete from queuemembers where queue_id=%s and member_id=%s",
