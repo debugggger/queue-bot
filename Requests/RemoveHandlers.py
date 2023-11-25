@@ -43,13 +43,26 @@ class RemoveHandlers(BaseHandler):
                     self.bot.reply_to(message, 'Тебя еще нет в этой очереди. Как так то?!',
                                       reply_markup=types.ReplyKeyboardRemove(selective=True))
                 else:
+
+                    place = QueueService.getPlaceByMemberId(self.database, member.id)
                     QueueService.deleteQueueMember(self.database, queue.id, member.id)
                     self.bot.reply_to(message, 'Ты вышел из этой очереди',
                                       reply_markup=types.ReplyKeyboardRemove(selective=True))
+
+                    self.updateQueue(place, queue)
                     updateLastQueueText(self.bot, self.database, queue.id, self.runtimeInfoManager)
+
 
             else:
                 self.bot.reply_to(message, 'Очереди по этому предмету еще нет. Самое время создать ее!',
                                   reply_markup=types.ReplyKeyboardRemove(selective=True))
+
+    def updateQueue(self, place, queue):
+        members = QueueService.getMembersInQueue(self.database, queue.id)
+        for m in members:
+            if m.placeNumber > place:
+                m.placeNumber -= 1
+                QueueService.addToQueue(self.database, queue.id, m.member.tgNum, m.placeNumber, int(m.entryType))
+
 
             

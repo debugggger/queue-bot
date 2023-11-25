@@ -24,6 +24,14 @@ class QueueService:
         return count != 0
 
     @staticmethod
+    def getPlaceByMemberId(database, memberId: int) -> int:
+        with database.connection.cursor() as cur:
+            cur.execute("select place_number from queuemembers where member_id=%s",
+                        (memberId,))
+            place = cur.fetchall()[0][0]
+        return place
+
+    @staticmethod
     def deleteMemberFromAllQueues(database, memberId: int) -> None:
         with database.connection.cursor() as cur:
             cur.execute("delete from queuemembers where member_id=%s",
@@ -66,10 +74,10 @@ class QueueService:
             return  QueueMember(member, *result[2:])
 
     @staticmethod
-    def isPlaceEmpty(database, num, queueId) -> bool:
+    def isPlaceEmpty(database, num, queueId, memberId) -> bool:
         with database.connection.cursor() as cur:
             count = cur.execute("select count(member_id) from queuemembers "
-                                "where queue_id = " + str(queueId) + " and place_number = " + str(num))
+                                "where queue_id = " + str(queueId) + " and place_number = " + str(num) + " and member_id != " + str(memberId))
             res = cur.fetchall()
             for row in res:
                 count = row[0]
@@ -137,3 +145,29 @@ class QueueService:
 
             cur.execute("insert into queuemembers(queue_id, member_id, entry_time, place_number, entry_type) values(%s, %s, %s, %s, %s)",
                         (queue_id, member.id, dt, place, entry_type))
+        # with database.connection.cursor() as cur:
+        #     dt = str(datetime.now())
+        #
+        #     member = MemberService.getMemberByTgNum(database, tg_num)
+        #
+        #     cur.execute("select count(member_id) from queuemembers where member_id='" + str(
+        #         member.id) + "' and queue_id='" + str(queue_id) + "'")
+        #     count = cur.fetchall()[0][0]
+        #
+        #     if count != 0:
+        #         cur.execute("select place_number from queuemembers where member_id='" + str(
+        #             member.id) + "' and queue_id='" + str(queue_id) + "'")
+        #         cur_place = cur.fetchall()[0][0]
+        #
+        #         if cur_place > place:
+        #             cur.execute(
+        #                 "delete from queuemembers where member_id='" + str(member.id) + "' and queue_id='" + str(
+        #                     queue_id) + "'")
+        #
+        #             cur.execute(
+        #                 "insert into queuemembers(queue_id, member_id, entry_time, place_number, entry_type) values(%s, %s, %s, %s, %s)",
+        #                 (queue_id, member.id, dt, place, entry_type))
+        #         else:
+        #             pass
+        #     else:
+        #         pass
