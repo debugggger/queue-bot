@@ -16,7 +16,7 @@ from Requests.QueueFun import QueueFun
 from Requests.SubjectHandlers import SubjectHandlers
 from Requests.UserHandlers import UserHandlers
 from Requests.RuntimeInfoManager import RuntimeInfoManager
-from utils import checkMessage
+from utils import checkMessage, updateLastQueueText
 
 load_dotenv()
 
@@ -147,14 +147,22 @@ def handle_left_chat_member(message: telebot.types.Message):
     if not checkMessage(message, chatId):
         return
 
-    bot.send_message(message.chat.id, f"Пользователь с ID {message.left_chat_member.id} покинул чат.")
+    #bot.send_message(message.chat.id, f"Пользователь с ID {message.left_chat_member.id} покинул чат.")
 
     if not MemberService.isMemberExistByTgNum(botDB, message.left_chat_member.id):
         return
 
     member = MemberService.getMemberByTgNum(botDB, message.left_chat_member.id)
+    for q in QueueService.getQueues(botDB):
+        if QueueService.isMemberInQueue(botDB, q.id, member.id):
+            place = QueueService.getPlaceByMemberId(botDB, q.id, member.id)
+            removeHandlers.updateQueue(place, q)
+
     QueueService.deleteMemberFromAllQueues(botDB, member.id)
+    for q in QueueService.getQueues(botDB):
+        updateLastQueueText(bot, botDB, q.id, runtimeInfoManager)
+
     # TODO: отклонить все запросы на смену мест
-    MemberService.deleteMember(botDB, message.left_chat_member.id)
+    MemberService.deleteMember(botDB, str(message.left_chat_member.id))
 
 bot.infinity_polling()

@@ -8,6 +8,7 @@ from Services.QueueService import QueueService
 from Services.SubjectService import SubjectService
 from utils import updateLastQueueText
 
+
 class RemoveHandlers(BaseHandler):
     def removefromCommand(self, message: telebot.types.Message):
         if not MemberService.isMemberExistByTgNum(self.database, message.from_user.id):
@@ -32,7 +33,8 @@ class RemoveHandlers(BaseHandler):
             subjectTitle = message.text.removeprefix('Очередь по ')
 
             if not SubjectService.isSubjectExist(self.database, subjectTitle):
-                self.bot.reply_to(message, 'Такого предмета не сущесвует', reply_markup=types.ReplyKeyboardRemove(selective=True))
+                self.bot.reply_to(message, 'Такого предмета не сущесвует',
+                                  reply_markup=types.ReplyKeyboardRemove(selective=True))
                 return
 
             subject = SubjectService.getSubjectByTitle(self.database, subjectTitle)
@@ -44,7 +46,7 @@ class RemoveHandlers(BaseHandler):
                                       reply_markup=types.ReplyKeyboardRemove(selective=True))
                 else:
 
-                    place = QueueService.getPlaceByMemberId(self.database, member.id)
+                    place = QueueService.getPlaceByMemberId(self.database, queue.id, member.id)
                     QueueService.deleteQueueMember(self.database, queue.id, member.id)
                     self.bot.reply_to(message, 'Ты вышел из этой очереди',
                                       reply_markup=types.ReplyKeyboardRemove(selective=True))
@@ -63,6 +65,3 @@ class RemoveHandlers(BaseHandler):
             if m.placeNumber > place:
                 m.placeNumber -= 1
                 QueueService.addToQueue(self.database, queue.id, m.member.tgNum, m.placeNumber, int(m.entryType))
-
-
-            
