@@ -6,6 +6,7 @@ import telebot
 from telebot import types
 from dotenv import load_dotenv
 from Requests.RemoveHandlers import RemoveHandlers
+from Requests.ReplaceHandlers import ReplaceHandlers
 from Services.MemberService import MemberService
 from Services.QueueService import QueueService
 
@@ -30,6 +31,7 @@ runtimeInfoManager = RuntimeInfoManager()
 subjectHandlers = SubjectHandlers(bot, botDB, runtimeInfoManager)
 userHandlers = UserHandlers(bot, botDB, runtimeInfoManager)
 removeHandlers = RemoveHandlers(bot, botDB, runtimeInfoManager)
+replaceHandlers = ReplaceHandlers(bot, botDB, runtimeInfoManager)
 
 qFun = QueueFun(bot, botDB, runtimeInfoManager)
 qEntity = QueueEntity(bot, botDB, runtimeInfoManager)
@@ -49,11 +51,14 @@ def commandsList(message):
     bot.send_message(message.chat.id,
                      "можно воспользоваться следующими командами:\n"
                      "/member - добавление в список пользователей\n"
-                     "/show - вывод очерди\n"
+                     "/subject - добавление предмета\n"
                      "/create - создание очереди\n"
+                     "/delete - удаление очереди\n"
+                     "/show - вывод очереди\n"
                      "/join - запись в последнюю очередь\n"
-                     "/jointo - запись в любую из очередей\n"
-                     "/delete - удаление очереди")
+                     "/jointo - запись в любую из очередей\n"                     
+                     "/replaceto - смена мест\n"
+                     "/removefrom - выход из очереди\n")
 
 def startCommand(message):
     markup = types.InlineKeyboardMarkup()
@@ -77,6 +82,7 @@ commandHandlers: Dict[str, Callable[[telebot.types.Message], None]] = {
     '/subject': subjectHandlers.subjectCommand,
     '/removesubject': subjectHandlers.removesubjectCommand,
     '/removefrom': removeHandlers.removefromCommand,
+    '/replaceto': replaceHandlers.replacetoCommand,
 
     '/start@queeeeueeee_bot': startCommand,
     '/help@queeeeueeee_bot': commandsList,
@@ -107,6 +113,7 @@ textHandlers: List[Callable[[telebot.types.Message], None]] = {
     qFun.joinTextHandler,
     qEntity.queueTextHandler,
     removeHandlers.removefromTextHandler,
+    replaceHandlers.replaceTextHandler,
 }
 
 @bot.message_handler(commands=['debug_chatid'])

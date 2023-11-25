@@ -36,16 +36,20 @@ class QueueEntity(BaseHandler):
         self.runtimeInfoManager.sendBarrier.add('delete', message.from_user.id)
 
     def showCommand(self, message: telebot.types.Message):
-        markup = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True, selective=True)
-        subjects = SubjectService.getSubjects(self.database)
-        markup.add('❌ Отмена')
+        if QueueService.isAnyQueueExist(self.database):
+            markup = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True, selective=True)
+            subjects = SubjectService.getSubjects(self.database)
+            markup.add('❌ Отмена')
 
-        for i in range(len(subjects)):
-            if QueueService.isQueueExist(self.database, subjects[i].id):
-                markup.add(str(subjects[i].title))
+            for i in range(len(subjects)):
+                if QueueService.isQueueExist(self.database, subjects[i].id):
+                    markup.add(str(subjects[i].title))
 
-        self.bot.reply_to(message, 'По какому предмету ты хочешь просмотреть очередь?', reply_markup=markup)
-        self.runtimeInfoManager.sendBarrier.add('show', message.from_user.id)
+            self.bot.reply_to(message, 'По какому предмету ты хочешь просмотреть очередь?', reply_markup=markup)
+            self.runtimeInfoManager.sendBarrier.add('show', message.from_user.id)
+        else:
+            self.bot.reply_to(message, 'Еще нет никаких очередей. Радуйся!',
+                              reply_markup=types.ReplyKeyboardRemove(selective=True))
 
     def queueTextHandler(self, message: telebot.types.Message) -> None:
         if self.runtimeInfoManager.sendBarrier.checkAndRemove('create', message.from_user.id):

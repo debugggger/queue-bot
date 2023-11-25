@@ -15,14 +15,18 @@ class RemoveHandlers(BaseHandler):
             self.bot.reply_to(message, 'Для использования этой команды тебе нужно записаться в списочек member-ов')
             return
 
-        markup = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True, selective=True)
-        markup.add('❌ Отмена')
-        for s in SubjectService.getSubjects(self.database):
-            if QueueService.isQueueExist(self.database, s.id):
-                markup.add(f'Очередь по {s.title}')
+        if QueueService.isAnyQueueExist(self.database):
+            markup = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True, selective=True)
+            markup.add('❌ Отмена')
+            for s in SubjectService.getSubjects(self.database):
+                if QueueService.isQueueExist(self.database, s.id):
+                    markup.add(f'Очередь по {s.title}')
 
-        self.bot.reply_to(message, 'Из какой очереди ты хочешь выйти', reply_markup=markup)
-        self.runtimeInfoManager.sendBarrier.add('removefrom', message.from_user.id)
+            self.bot.reply_to(message, 'Из какой очереди ты хочешь выйти', reply_markup=markup)
+            self.runtimeInfoManager.sendBarrier.add('removefrom', message.from_user.id)
+        else:
+            self.bot.reply_to(message, 'Еще нет никаких очередей. Радуйся!',
+                              reply_markup=types.ReplyKeyboardRemove(selective=True))
 
     def removefromTextHandler(self, message: telebot.types.Message):
         if self.runtimeInfoManager.sendBarrier.checkAndRemove('removefrom', message.from_user.id):
