@@ -1,3 +1,4 @@
+import datetime
 import telebot
 from telebot import types
 from Entities.Subject import Subject
@@ -7,7 +8,7 @@ from Requests.RuntimeInfoManager import RuntimeInfoManager
 from Services.MemberService import MemberService
 from Services.QueueService import QueueService
 from Services.SubjectService import SubjectService
-from utils import removeBlank, checkSubjectTitle
+from utils import formQueueText, removeBlank, checkSubjectTitle
 
 
 class QueueEntity(BaseHandler):
@@ -20,7 +21,12 @@ class QueueEntity(BaseHandler):
         self.bot.reply_to(message, "По какому предмету ты хочешь создать очередь?", reply_markup=markup)
         self.runtimeInfoManager.sendBarrier.add('create', message.from_user.id)
 
-    def deleteCommand(self, message):
+    def deleteCommand(self, message: telebot.types.Message):
+        chatMember: telebot.types.ChatMember = self.bot.get_chat_member(message.chat.id, message.from_user.id)
+        if chatMember.status not in ['creator', 'administrator']:
+            self.bot.reply_to(message, 'Эту команду могут выполнять только администраторы')
+            return
+
         markup = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True, selective=True)
         markup.add('❌ Отмена')
         for s in SubjectService.getSubjects(self.database):
@@ -29,13 +35,7 @@ class QueueEntity(BaseHandler):
         self.bot.reply_to(message, "По какому предмету ты хочешь удалить очередь?", reply_markup=markup)
         self.runtimeInfoManager.sendBarrier.add('delete', message.from_user.id)
 
-    def showCallback(self, callback):
-        numStr = callback.data.strip("showNum_")
-        numSubj = int(numStr)
-        subjects = SubjectService.getSubjectById(self.database, numSubj)
-        self.bot.send_message(callback.message.chat.id, "Очередь по " + subjects.title + ":\n")
-
-    def showCommand(self, message):
+    def showCommand(self, message: telebot.types.Message):
         markup = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True, selective=True)
         subjects = SubjectService.getSubjects(self.database)
         markup.add('❌ Отмена')
@@ -84,7 +84,7 @@ class QueueEntity(BaseHandler):
             else:
                 self.bot.reply_to(message, "Очередь по " + subject.title + " не существует.", reply_markup=types.ReplyKeyboardRemove(selective=True))
 
-        if self.runtimeInfoManager.sendBarrier.check('show', message.from_user.id):
+        if self.runtimeInfoManager.sendBarrier.checkAndRemove('show', message.from_user.id):
             title: str = removeBlank(message.text)
             if title == "❌ Отмена":
                 self.bot.reply_to(message, 'Команда отменена',
@@ -93,19 +93,17 @@ class QueueEntity(BaseHandler):
 
             if SubjectService.isSubjectExist(self.database, title):
 
-                qList = {}
+                if not self.runtimeInfoManager.timeoutManager.checkAndUpdate('show', title, datetime.datetime.now()):
+                    self.bot.reply_to(message, 'Очереди можно смотерть не чаще, чем раз в ' +
+                                      str(self.runtimeInfoManager.timeoutManager.getTimeout('show')) + ' секунд')
+                    return
+
                 subj = SubjectService.getSubjectByTitle(self.database, title)
                 queue = QueueService.getQueueBySubjectId(self.database, subj.id)
-                for member in queue.members:
-                    val =  " - " + str(MemberService.getMemberById(self.database, member.memberId).name) + "\n"
+                queueText = formQueueText(queue)
 
-                    qList [member.placeNumber] = val
+                msg = self.bot.reply_to(message, queueText)
+                self.runtimeInfoManager.lastQueueMessages[title] = msg
 
-                sortedQ = {k: v for k, v in sorted(qList.items())}
-                resStr = ''
-                for q in sortedQ:
-                    resStr += str(q) + sortedQ[q]
-
-                self.bot.reply_to(message, "Очередь по " + title + ":\n" + resStr)
             else:
                 self.bot.reply_to(message, "Очереди по такому предмету нет")

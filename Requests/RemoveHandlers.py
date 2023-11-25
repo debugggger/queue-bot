@@ -6,6 +6,7 @@ from Requests.BaseHandler import BaseHandler
 from Services.MemberService import MemberService
 from Services.QueueService import QueueService
 from Services.SubjectService import SubjectService
+from utils import updateLastQueueText
 
 class RemoveHandlers(BaseHandler):
     def removefromCommand(self, message: telebot.types.Message):
@@ -45,6 +46,8 @@ class RemoveHandlers(BaseHandler):
                     QueueService.deleteQueueMember(self.database, queue.id, member.id)
                     self.bot.reply_to(message, 'Ты вышел из этой очереди',
                                       reply_markup=types.ReplyKeyboardRemove(selective=True))
+                    updateLastQueueText(self.bot, self.database, queue.id, self.runtimeInfoManager)
+
             else:
                 self.bot.reply_to(message, 'Очереди по этому предмету еще нет. Самое время создать ее!',
                                   reply_markup=types.ReplyKeyboardRemove(selective=True))

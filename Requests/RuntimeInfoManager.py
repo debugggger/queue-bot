@@ -1,12 +1,16 @@
+import datetime
 from typing import List, Dict
 
 
-# �����, ����������� ��������� �������� � ��������� ������.
-# ����� �����������, ��� ������ ����� ������� �������� ������������, ������� �������� � ������ �����.
+import telebot
+
+
+# Класс, позволяющий выполнять операции в несколько этапов.
+# Можно отслеживать, что вторую часть команды выполнил пользователь, который выполнил и первую часть.
 class SendBarrier:
     def __init__(self):
-        # {'�������': [������ telegram-id �������������]}
-        self.data : Dict[str, List[int]] = {}
+        # {'команда': [список telegram-id пользователей]}
+        self.data: Dict[str, List[int]] = {}
 
     def add(self, key: str, tgId: int) -> None:
         for item in self.data.values():
@@ -31,7 +35,55 @@ class SendBarrier:
         self.remove(key, tgId)
         return True
 
+class TimeoutManager:
+    def __init__(self, timeouts: Dict[str, datetime.timedelta]):
+        '''
+        self.lastUsages - словарь словарей.
+            Ключ первого уровня (key) - общий ключ по команде, например, имя команды ('show').
+                У всех команд этого ключа одинаковый таймаут, заданный в self.timeouts.
+            Ключ второго уровня - ключ в словаре, который является значением словаря первого уровня.
+                Этот ключ фильтрует различные запросы в рамках одной команды. Для этих запросов значение
+                таймаута одинаковое, но существует несколько запросов (у каждого из которых таймаут исчет в свое время)
+                
+            Например, хотим, чтобы таймаут для команды show был не один на всю команду,
+                а свой для каждой очереди. В таком случае key - 'show',
+                а innerKey - название очереди (предмета по которому создана очередь)
+
+            Предлагаю использовать ключ второго уровня (innerKey) равный None,
+                когда не нужно использовать ключи второго уровня. Например, делаем для команды 'show'
+                общий таймаут (один на всю команду), тогда ключ второго уровня всегда равен None и во
+                втором словаре всегда только одно значение - None
+        '''
+        self.lastUsages: Dict[str, Dict[any, datetime.datetime]] = {k: {} for k in timeouts.keys()}
+        self.timeouts: Dict[str, datetime.timedelta] = timeouts
+
+    def getTimeout(self, key: str) -> datetime.timedelta:
+        return self.timeouts[key].total_seconds()
+
+    def checkAndUpdate(self, key: str, innerKey: any, currentDatetime: datetime.datetime) -> bool:
+
+        # Словарь последних использований только для ключа key
+        lastUsages: Dict[any, datetime.datetime] = self.lastUsages[key]
+
+        # Если внутреннего ключа innerKey нет - создаем его
+        if innerKey not in lastUsages.keys():
+            self.lastUsages[key][innerKey] = currentDatetime
+            return True
+
+        # Последнее использование по обоим ключам
+        lastUsage: datetime.datetime = lastUsages[innerKey]
+
+        # Проверяем таймаут и обновляем данные
+        if currentDatetime - lastUsage > self.timeouts[key]:
+            self.lastUsages[key][innerKey] = currentDatetime
+            return True
+        else:
+            return False
+
 class RuntimeInfoManager:
     def __init__(self):
-        self.sendBarrier : SendBarrier = SendBarrier()
-        # ��� ������� ���������� ��� ��������� � ����� ����������, ��� �� ����� ��������� � ��
+        self.sendBarrier: SendBarrier = SendBarrier()
+        self.timeoutManager: TimeoutManager = TimeoutManager({
+            'show': datetime.timedelta(seconds=10),
+        })
+        self.lastQueueMessages: Dict[str, telebot.types.Message] = {}
