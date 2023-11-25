@@ -6,11 +6,16 @@ from Requests.BaseHandler import BaseHandler
 from Services.MemberService import MemberService
 from Services.QueueService import QueueService
 from Services.SubjectService import SubjectService
-from utils import updateLastQueueText
+from db import Database
 
 
-class RemoveHandlers(BaseHandler):
-    def removefromCommand(self, message: telebot.types.Message):
+class ReplaceHandlers(BaseHandler):
+    def __init__(self, bot: telebot.TeleBot, database: Database, runtimeInfoManager: RuntimeInfoManager):
+        BaseHandler.__init__(self, bot, database, runtimeInfoManager)
+        self.joinCertainList = {}
+        self.joinList = {}
+
+    def replacetoCommand(self, message: telebot.types.Message):
         if not MemberService.isMemberExistByTgNum(self.database, message.from_user.id):
             self.bot.reply_to(message, 'Для использования этой команды тебе нужно записаться в списочек member-ов')
             return
@@ -22,14 +27,14 @@ class RemoveHandlers(BaseHandler):
                 if QueueService.isQueueExist(self.database, s.id):
                     markup.add(f'Очередь по {s.title}')
 
-            self.bot.reply_to(message, 'Из какой очереди ты хочешь выйти', reply_markup=markup)
-            self.runtimeInfoManager.sendBarrier.add('removefrom', message.from_user.id)
+            self.bot.reply_to(message, 'В какой очереди ты хочешь поменяться местами', reply_markup=markup)
+            self.runtimeInfoManager.sendBarrier.add('replaceto', message.from_user.id)
         else:
             self.bot.reply_to(message, 'Еще нет никаких очередей. Радуйся!',
                               reply_markup=types.ReplyKeyboardRemove(selective=True))
 
-    def removefromTextHandler(self, message: telebot.types.Message):
-        if self.runtimeInfoManager.sendBarrier.checkAndRemove('removefrom', message.from_user.id):
+    def replaceTextHandler(self, message: telebot.types.Message):
+        if self.runtimeInfoManager.sendBarrier.checkAndRemove('replaceto', message.from_user.id):
             if not message.text.startswith('Очередь по '):
                 self.bot.reply_to(message, 'Команда отменена', reply_markup=types.ReplyKeyboardRemove(selective=True))
                 return
@@ -37,7 +42,7 @@ class RemoveHandlers(BaseHandler):
             subjectTitle = message.text.removeprefix('Очередь по ')
 
             if not SubjectService.isSubjectExist(self.database, subjectTitle):
-                self.bot.reply_to(message, 'Такого предмета не сущесвует',
+                self.bot.reply_to(message, 'Такого предмета не существует',
                                   reply_markup=types.ReplyKeyboardRemove(selective=True))
                 return
 
@@ -46,39 +51,16 @@ class RemoveHandlers(BaseHandler):
                 queue = QueueService.getQueueBySubjectId(self.database, subject.id)
                 member = MemberService.getMemberByTgNum(self.database, message.from_user.id)
                 if not QueueService.isMemberInQueue(self.database, queue.id, member.id):
-                    self.bot.reply_to(message, 'Тебя еще нет в этой очереди. Как так то?!',
+                    self.bot.reply_to(message, 'Тебя же нет в этой очереди. Ты чево пытаешься?!',
                                       reply_markup=types.ReplyKeyboardRemove(selective=True))
                 else:
-
-                    place = QueueService.getPlaceByMemberId(self.database, queue.id, member.id)
-                    QueueService.deleteQueueMember(self.database, queue.id, member.id)
-                    self.bot.reply_to(message, 'Ты вышел из этой очереди',
-                                      reply_markup=types.ReplyKeyboardRemove(selective=True))
-
-                    self.updateQueue(message, place, queue)
-                    updateLastQueueText(self.bot, self.database, queue.id, self.runtimeInfoManager)
-
+                    self.replaceCertain(message)
 
             else:
                 self.bot.reply_to(message, 'Очереди по этому предмету еще нет. Самое время создать ее!',
                                   reply_markup=types.ReplyKeyboardRemove(selective=True))
 
-    def updateQueue(self, message: telebot.types.Message, place, queue):
-        members = QueueService.getMembersInQueue(self.database, queue.id)
-        count = 0
-        m = {}
-        for mem in members:
-            m[mem.member.tgNum] = mem.placeNumber
-        m = {k: v for k, v in sorted(m.items(), key=lambda item: item[1])}
-
-        for tgId in m.keys():
-            if m[tgId] > place:
-                m[tgId] -= 1
-                if count == 0:
-                    chatMember = self.bot.get_chat_member(message.chat.id, tgId)
-                    self.bot.send_message(message.chat.id, '@' + chatMember.user.username + ' твоя очередь сдавать')
-                    count = 1
-
-                QueueService.addToQueue(self.database, queue.id, int(tgId), int(m[tgId]), int(QueueService.getMemberInQueueByPlace(self.database, queue.id, int(m[tgId])+1).entryType))
-            else:
-                count = 1
+    def replaceCertain(self, message: types.Message):
+        self.bot.reply_to(message, "Введи место с которым хочешь поменяться",
+                          reply_markup=types.ReplyKeyboardRemove(selective=True))
+        self.joinCertainList[message.from_user.id] = self.joinList[message.from_user.id]

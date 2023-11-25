@@ -8,6 +8,12 @@ from Services.SubjectService import SubjectService
 
 
 class QueueService:
+    @staticmethod
+    def isAnyQueueExist(database) -> bool:
+        with database.connection.cursor() as cur:
+            cur.execute("select count(*) from queuesubjects")
+            count = cur.fetchall()[0][0]
+        return count != 0
 
     @staticmethod
     def isQueueExist(database, subjId: int) -> bool:
