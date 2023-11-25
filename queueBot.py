@@ -156,7 +156,7 @@ def handle_left_chat_member(message: telebot.types.Message):
     for q in QueueService.getQueues(botDB):
         if QueueService.isMemberInQueue(botDB, q.id, member.id):
             place = QueueService.getPlaceByMemberId(botDB, q.id, member.id)
-            removeHandlers.updateQueue(place, q)
+            removeHandlers.updateQueue(message, place, q)
 
     QueueService.deleteMemberFromAllQueues(botDB, member.id)
     for q in QueueService.getQueues(botDB):

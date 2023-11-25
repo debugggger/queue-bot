@@ -51,7 +51,7 @@ class RemoveHandlers(BaseHandler):
                     self.bot.reply_to(message, 'Ты вышел из этой очереди',
                                       reply_markup=types.ReplyKeyboardRemove(selective=True))
 
-                    self.updateQueue(place, queue)
+                    self.updateQueue(message, place, queue)
                     updateLastQueueText(self.bot, self.database, queue.id, self.runtimeInfoManager)
 
 
@@ -59,9 +59,22 @@ class RemoveHandlers(BaseHandler):
                 self.bot.reply_to(message, 'Очереди по этому предмету еще нет. Самое время создать ее!',
                                   reply_markup=types.ReplyKeyboardRemove(selective=True))
 
-    def updateQueue(self, place, queue):
+    def updateQueue(self, message: telebot.types.Message, place, queue):
         members = QueueService.getMembersInQueue(self.database, queue.id)
-        for m in members:
-            if m.placeNumber > place:
-                m.placeNumber -= 1
-                QueueService.addToQueue(self.database, queue.id, m.member.tgNum, m.placeNumber, int(m.entryType))
+        count = 0
+        m = {}
+        for mem in members:
+            m[mem.member.tgNum] = mem.placeNumber
+        m = {k: v for k, v in sorted(m.items(), key=lambda item: item[1])}
+
+        for tgId in m.keys():
+            if m[tgId] > place:
+                m[tgId] -= 1
+                if count == 0:
+                    chatMember = self.bot.get_chat_member(message.chat.id, tgId)
+                    self.bot.send_message(message.chat.id, '@' + chatMember.user.username + ' твоя очередь сдавать')
+                    count = 1
+
+                QueueService.addToQueue(self.database, queue.id, int(tgId), int(m[tgId]), int(QueueService.getMemberInQueueByPlace(self.database, queue.id, int(m[tgId])+1).entryType))
+            else:
+                count = 1
