@@ -24,6 +24,13 @@ class QueueService:
         return count != 0
 
     @staticmethod
+    def getPlaceByMemberId(database, queueId: int, memberId: int) -> int:
+        with database.connection.cursor() as cur:
+            cur.execute("select place_number from queuemembers where queue_id=%s and member_id=%s", (queueId, memberId))
+            place = cur.fetchall()[0][0]
+        return place
+
+    @staticmethod
     def deleteMemberFromAllQueues(database, memberId: int) -> None:
         with database.connection.cursor() as cur:
             cur.execute("delete from queuemembers where member_id=%s",
@@ -66,10 +73,10 @@ class QueueService:
             return  QueueMember(member, *result[2:])
 
     @staticmethod
-    def isPlaceEmpty(database, num, queueId) -> bool:
+    def isPlaceEmpty(database, num, queueId, memberId) -> bool:
         with database.connection.cursor() as cur:
             count = cur.execute("select count(member_id) from queuemembers "
-                                "where queue_id = " + str(queueId) + " and place_number = " + str(num))
+                                "where queue_id = " + str(queueId) + " and place_number = " + str(num) + " and member_id != " + str(memberId))
             res = cur.fetchall()
             for row in res:
                 count = row[0]
