@@ -20,7 +20,11 @@ class ReplaceHandlers(BaseHandler):
         if not MemberService.isMemberExistByTgNum(self.database, message.from_user.id):
             self.bot.reply_to(message, 'Для использования этой команды тебе нужно записаться в списочек member-ов')
             return
-
+        curMember = MemberService.getMemberByTgNum(self.database, message.from_user.id)
+        if not self.runtimeInfoManager.checkReplace(curMember.id):
+            self.bot.reply_to(message, "Извините, у вас уже есть запрос на смену места",
+                              reply_markup=types.ReplyKeyboardRemove(selective=True))
+            return
         if QueueService.isAnyQueueExist(self.database):
             markup = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True, selective=True)
             markup.add('❌ Отмена')
@@ -37,6 +41,11 @@ class ReplaceHandlers(BaseHandler):
     def replaceCommand(self, message):
         members = [member.tgNum for member in MemberService.getMembers(self.database)]
         if str(message.from_user.id) in members:
+            curMember = MemberService.getMemberByTgNum(self.database, message.from_user.id)
+            if not self.runtimeInfoManager.checkReplace(curMember.id):
+                self.bot.reply_to(message, "Извините, у вас уже есть запрос на смену места",
+                                  reply_markup=types.ReplyKeyboardRemove(selective=True))
+                return
             self.replaceConnector(message, -1)
         else:
             self.bot.reply_to(message, "Для использования этой команды тебе нужно записаться в списочек"
@@ -103,8 +112,7 @@ class ReplaceHandlers(BaseHandler):
                     # Иначе проверяем человека
                     replaceQueueMem = QueueService.getMemberInQueueByPlace(self.database, qId, entryNum)
                     chatRepMem = self.bot.get_chat_member(message.chat.id, replaceQueueMem.member.tgNum)
-                    # if self.runtimeInfoManager.sendBarrier.check('replaceto', replaceQueueMem.member.tgNum):
-                    if not self.runtimeInfoManager.checkReplace(replaceQueueMem.member.id, qId):
+                    if not self.runtimeInfoManager.checkReplace(replaceQueueMem.member.id):
                         self.bot.reply_to(message, "Извините, этого человека уже есть запрос на смену места",
                                           reply_markup=types.ReplyKeyboardRemove(selective=True))
                     else:

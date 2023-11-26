@@ -14,7 +14,11 @@ class RemoveHandlers(BaseHandler):
         if not MemberService.isMemberExistByTgNum(self.database, message.from_user.id):
             self.bot.reply_to(message, 'Для использования этой команды тебе нужно записаться в списочек member-ов')
             return
-
+        curMember = MemberService.getMemberByTgNum(self.database, message.from_user.id)
+        if not self.runtimeInfoManager.checkReplace(curMember.id):
+            self.bot.reply_to(message, "Извините, у вас есть запрос на смену места",
+                              reply_markup=types.ReplyKeyboardRemove(selective=True))
+            return
         if QueueService.isAnyQueueExist(self.database):
             markup = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True, selective=True)
             markup.add('❌ Отмена')
