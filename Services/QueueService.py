@@ -37,6 +37,13 @@ class QueueService:
         return place
 
     @staticmethod
+    def getMaxPlaceNumber(database, queueId: int) -> int:
+        with database.connection.cursor() as cur:
+            cur.execute("select max(place_number) from queuemembers where queue_id=%s", (queueId, ))
+            place = cur.fetchall()[0][0]
+        return place
+
+    @staticmethod
     def deleteMemberFromAllQueues(database, memberId: int) -> None:
         with database.connection.cursor() as cur:
             cur.execute("delete from queuemembers where member_id=%s",
@@ -71,12 +78,22 @@ class QueueService:
         return queueMembers
 
     @staticmethod
+    def getCountMembersInQueue(database, queueId: int) -> int:
+        queueMembers: List[QueueMember] = []
+        with database.connection.cursor() as cur:
+            cur.execute("select count(*) from queuemembers where queue_id=%s", (queueId,))
+            res = cur.fetchall()
+            for row in res:
+                count = row[0]
+        return count
+
+    @staticmethod
     def getMemberInQueueByPlace(database, queueId, place) -> QueueMember:
         with database.connection.cursor() as cur:
             cur.execute("select * from queuemembers where queue_id = " + str(queueId) + " and place_number = " + str(place))
             result = cur.fetchall()[0]
             member = MemberService.getMemberById(database, result[1])
-            return  QueueMember(member, *result[2:])
+            return QueueMember(member, *result[2:])
 
     @staticmethod
     def isPlaceEmpty(database, num, queueId, memberId) -> bool:
