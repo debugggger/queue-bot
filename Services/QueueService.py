@@ -175,3 +175,17 @@ class QueueService:
 
             cur.execute("insert into queuemembers(queue_id, member_id, entry_time, place_number, entry_type) values(%s, %s, %s, %s, %s)",
                         (queue_id, member.id, dt, place, entry_type))
+
+    @staticmethod
+    def setPlaceByMemberId(database, queueId: int, memberId: int, newPlaceNumber: int) -> None:
+        with database.connection.cursor() as cur:
+            cur.execute("update queuemembers set place_number=%s where queue_id=%s and member_id=%s", (newPlaceNumber, queueId, memberId))
+
+    @staticmethod
+    def getMemberInQueueByMemberId(database, queueId, memberId) -> QueueMember:
+        with database.connection.cursor() as cur:
+            cur.execute(
+                "select * from queuemembers where queue_id = " + str(queueId) + " and member_id = " + str(memberId))
+            result = cur.fetchall()[0]
+            member = MemberService.getMemberById(database, result[1])
+            return QueueMember(member, *result[2:])
