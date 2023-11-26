@@ -85,6 +85,9 @@ class QueueEntity(BaseHandler):
                 queue = QueueService.getQueueBySubjectId(self.database, subject.id)
                 QueueService.deleteQueue(self.database, queue.id)
                 self.bot.reply_to(message, 'Очередь удалена', reply_markup=types.ReplyKeyboardRemove(selective=True))
+
+                self.runtimeInfoManager.replaceRequests = [rr for rr in self.runtimeInfoManager.replaceRequests if rr.queueId != queue.id]
+
             else:
                 self.bot.reply_to(message, "Очередь по " + subject.title + " не существует.", reply_markup=types.ReplyKeyboardRemove(selective=True))
 

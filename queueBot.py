@@ -141,7 +141,7 @@ textHandlers: List[Callable[[telebot.types.Message], None]] = {
 
 @bot.message_handler(commands=['debug_chatid'])
 def commandsHandler(message: telebot.types.Message):
-    if not checkMessage(message):
+    if not checkMessage(message, timeout=None):
         return
 
     bot.send_message(message.chat.id, f'chat_id = {message.chat.id}')
@@ -149,7 +149,7 @@ def commandsHandler(message: telebot.types.Message):
 
 @bot.message_handler(func=lambda message: message.text.startswith('/'))
 def commandsHandler(message: telebot.types.Message):
-    if not checkMessage(message, chatId):
+    if not checkMessage(message, chatId, timeout=None):
         return
 
     if message.text in commandHandlers.keys():
@@ -157,7 +157,7 @@ def commandsHandler(message: telebot.types.Message):
 
 @bot.callback_query_handler(func = lambda callback: True)
 def callback_message(callback: telebot.types.CallbackQuery):
-    if not checkMessage(callback.message, chatId):
+    if not checkMessage(callback.message, chatId, timeout=None):
         return
 
     for key, handler in callbackHandlers.items():
@@ -166,7 +166,7 @@ def callback_message(callback: telebot.types.CallbackQuery):
 
 @bot.message_handler(func=lambda message: not message.text.startswith('/'))
 def handle_text(message: telebot.types.Message):
-    if not checkMessage(message, chatId):
+    if not checkMessage(message, chatId, timeout=None):
         return
 
     for textHandler in textHandlers:
@@ -174,7 +174,7 @@ def handle_text(message: telebot.types.Message):
 
 @bot.message_handler(content_types=['left_chat_member'])
 def handle_left_chat_member(message: telebot.types.Message):
-    if not checkMessage(message, chatId):
+    if not checkMessage(message, chatId, timeout=None):
         return
 
     #bot.send_message(message.chat.id, f"Пользователь с ID {message.left_chat_member.id} покинул чат.")
