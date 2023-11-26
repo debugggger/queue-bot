@@ -85,6 +85,7 @@ commandHandlers: Dict[str, Callable[[telebot.types.Message], None]] = {
     '/replaceto': replaceHandlers.replacetoCommand,
     '/replace': replaceHandlers.replaceCommand,
     '/reject': replaceHandlers.rejectCommand,
+    '/confirm': replaceHandlers.confirmCommand,
 
     '/start@queeeeueeee_bot': startCommand,
     '/help@queeeeueeee_bot': commandsList,
@@ -100,6 +101,7 @@ commandHandlers: Dict[str, Callable[[telebot.types.Message], None]] = {
     '/replaceto@queeeeueeee_bot': replaceHandlers.replacetoCommand,
     '/replace@queeeeueeee_bot': replaceHandlers.replaceCommand,
     '/reject@queeeeueeee_bot': replaceHandlers.rejectCommand,
+    '/confirm@queeeeueeee_bot': replaceHandlers.confirmCommand,
 }
 
 callbackHandlers: Dict[str, Callable[[telebot.types.CallbackQuery], None]] = {

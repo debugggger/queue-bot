@@ -8,6 +8,7 @@ from Services.MemberService import MemberService
 from Services.QueueService import QueueService
 from Services.SubjectService import SubjectService
 from db import Database
+from utils import updateLastQueueText
 
 
 class ReplaceHandlers(BaseHandler):
@@ -63,6 +64,24 @@ class ReplaceHandlers(BaseHandler):
             self.bot.reply_to(message, "Смена мест отменена")
         else:
             self.bot.reply_to(message, 'Вы не начинали смену мест')
+
+    def confirmCommand(self, message):
+        if not MemberService.isMemberExistByTgNum(self.database, message.from_user.id):
+            self.bot.reply_to(message, 'Для использования этой команды тебе нужно записаться в списочек member-ов')
+            return
+        curMember = MemberService.getMemberByTgNum(self.database, message.from_user.id)
+        if self.runtimeInfoManager.checkReplace(curMember.id):
+            self.bot.reply_to(message, "Извините, у вас еще нет запросов на смену места",
+                              reply_markup=types.ReplyKeyboardRemove(selective=True))
+            return
+        rR = self.runtimeInfoManager.getAndRemoveReplaceRequest(curMember.id)
+        fromQueueMem = QueueService.getMemberInQueueByMemberId(self.database, rR.queueId, rR.fromId)
+        toQueueMem = QueueService.getMemberInQueueByMemberId(self.database, rR.queueId, rR.toId)
+        QueueService.setPlaceByMemberId(self.database, rR.queueId, rR.fromId, toQueueMem.placeNumber)
+        QueueService.setPlaceByMemberId(self.database, rR.queueId, rR.toId, fromQueueMem.placeNumber)
+        updateLastQueueText(self.bot, self.database, rR.queueId, self.runtimeInfoManager)
+        self.bot.reply_to(message, "Смена мест произошла успешно!",
+                          reply_markup=types.ReplyKeyboardRemove(selective=True))
 
     def replaceConnector(self, message, queueId):
         if len(QueueService.getQueues(self.database)) == 0:

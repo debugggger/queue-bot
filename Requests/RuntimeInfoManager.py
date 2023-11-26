@@ -97,6 +97,13 @@ class RuntimeInfoManager:
         self.lastQueueMessages: Dict[str, telebot.types.Message] = {}
         self.replaceRequests: List[ReplaceRequest] = []
 
+    def getAndRemoveReplaceRequest(self, memberId) -> ReplaceRequest:
+        for rr in self.replaceRequests:
+            if memberId == rr.fromId or memberId == rr.toId:
+                rrRet = rr
+                self.replaceRequests.remove(rr)
+                return rrRet
+
     def checkReplace(self, memberId) -> bool:
         for rr in self.replaceRequests:
             if memberId == rr.fromId or memberId == rr.toId:
