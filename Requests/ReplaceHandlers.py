@@ -1,3 +1,5 @@
+import datetime
+
 import telebot
 from telebot import types
 
@@ -18,6 +20,7 @@ class ReplaceHandlers(BaseHandler):
         self.replaceList = {}
 
     def replacetoCommand(self, message: telebot.types.Message):
+        self.runtimeInfoManager.removeOldReplaceRequest()
         if not MemberService.isMemberExistByTgNum(self.database, message.from_user.id):
             self.bot.reply_to(message, 'Для использования этой команды тебе нужно записаться в списочек member-ов')
             return
@@ -40,6 +43,7 @@ class ReplaceHandlers(BaseHandler):
                               reply_markup=types.ReplyKeyboardRemove(selective=True))
 
     def replaceCommand(self, message):
+        self.runtimeInfoManager.removeOldReplaceRequest()
         members = [member.tgNum for member in MemberService.getMembers(self.database)]
         if str(message.from_user.id) in members:
             curMember = MemberService.getMemberByTgNum(self.database, message.from_user.id)
@@ -53,6 +57,7 @@ class ReplaceHandlers(BaseHandler):
                                        " членов закрытого клуба любителей очередей.")
 
     def rejectCommand(self, message):
+        self.runtimeInfoManager.removeOldReplaceRequest()
         if not MemberService.isMemberExistByTgNum(self.database, message.from_user.id):
             self.bot.reply_to(message, 'Для использования этой команды тебе нужно записаться в списочек member-ов')
             return
@@ -66,6 +71,7 @@ class ReplaceHandlers(BaseHandler):
             self.bot.reply_to(message, 'Вы не начинали смену мест')
 
     def confirmCommand(self, message):
+        self.runtimeInfoManager.removeOldReplaceRequest()
         if not MemberService.isMemberExistByTgNum(self.database, message.from_user.id):
             self.bot.reply_to(message, 'Для использования этой команды тебе нужно записаться в списочек member-ов')
             return
@@ -75,6 +81,10 @@ class ReplaceHandlers(BaseHandler):
                               reply_markup=types.ReplyKeyboardRemove(selective=True))
             return
         rR = self.runtimeInfoManager.getAndRemoveReplaceRequest(curMember.id)
+        if self.runtimeInfoManager.timeoutManager.checkAndUpdate('replaceto', rR, datetime.datetime.now()):
+            self.bot.reply_to(message, 'Подтверждение смены мест активно только ' +
+                              str(self.runtimeInfoManager.timeoutManager.getTimeout('replaceto')) + ' секунд')
+            return
         fromQueueMem = QueueService.getMemberInQueueByMemberId(self.database, rR.queueId, rR.fromId)
         toQueueMem = QueueService.getMemberInQueueByMemberId(self.database, rR.queueId, rR.toId)
         QueueService.setPlaceByMemberId(self.database, rR.queueId, rR.fromId, toQueueMem.placeNumber)
@@ -135,7 +145,9 @@ class ReplaceHandlers(BaseHandler):
                         self.bot.reply_to(message, "Извините, этого человека уже есть запрос на смену места",
                                           reply_markup=types.ReplyKeyboardRemove(selective=True))
                     else:
-                        self.runtimeInfoManager.replaceRequests.append(ReplaceRequest(curMember.id, replaceQueueMem.member.id, qId))
+                        rR = ReplaceRequest(curMember.id, replaceQueueMem.member.id, qId)
+                        self.runtimeInfoManager.replaceRequests.append(rR)
+                        self.runtimeInfoManager.timeoutManager.checkAndUpdate('replaceto', rR, datetime.datetime.now())
                         self.bot.send_message(message.chat.id, '@' + chatRepMem.user.username
                                               + ' вам предлагают поменяться в очереди\n'
                                                 ' от кого: ' + ' @' + chatCurMem.user.username + '\n'
