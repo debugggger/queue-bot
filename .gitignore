@@ -1,0 +1,6 @@
+.idea
+.vs/
+token.txt
+.env
+__pycache__
+venv
