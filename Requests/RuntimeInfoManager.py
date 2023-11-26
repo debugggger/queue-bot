@@ -93,6 +93,7 @@ class RuntimeInfoManager:
         self.sendBarrier: SendBarrier = SendBarrier()
         self.timeoutManager: TimeoutManager = TimeoutManager({
             'show': datetime.timedelta(seconds=10),
+            'replaceto': datetime.timedelta(seconds=180),
         })
         self.lastQueueMessages: Dict[str, telebot.types.Message] = {}
         self.replaceRequests: List[ReplaceRequest] = []
@@ -116,3 +117,10 @@ class RuntimeInfoManager:
                 self.replaceRequests.remove(self.replaceRequests[i])
                 return True
         return False
+
+    def removeOldReplaceRequest(self) -> None:
+        for rr in self.replaceRequests:
+            if rr in self.timeoutManager.lastUsages['replaceto'].keys():
+                lastUsage = self.timeoutManager.lastUsages['replaceto'][rr]
+                if (datetime.datetime.now() - lastUsage) > self.timeoutManager.timeouts['replaceto']:
+                    self.replaceRequests.remove(rr)
