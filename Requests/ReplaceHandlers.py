@@ -2,7 +2,7 @@ import telebot
 from telebot import types
 
 from Entities import Subject
-from Requests.RuntimeInfoManager import RuntimeInfoManager
+from Requests.RuntimeInfoManager import RuntimeInfoManager, ReplaceRequest
 from Requests.BaseHandler import BaseHandler
 from Services.MemberService import MemberService
 from Services.QueueService import QueueService
@@ -42,6 +42,19 @@ class ReplaceHandlers(BaseHandler):
             self.bot.reply_to(message, "Для использования этой команды тебе нужно записаться в списочек"
                                        " членов закрытого клуба любителей очередей.")
 
+    def rejectCommand(self, message):
+        if not MemberService.isMemberExistByTgNum(self.database, message.from_user.id):
+            self.bot.reply_to(message, 'Для использования этой команды тебе нужно записаться в списочек member-ов')
+            return
+        curMember = MemberService.getMemberByTgNum(self.database, message.from_user.id)
+        if not QueueService.isMemberInAnyQueue(self.database, curMember.id):
+            self.bot.reply_to(message, 'Ты еще не записан ни в одну очередь. Ух, ты!')
+            return
+        if self.runtimeInfoManager.checkAndRemove(curMember.id):
+            self.bot.reply_to(message, "Смена мест отменена")
+        else:
+            self.bot.reply_to(message, 'Вы не начинали смену мест')
+
     def replaceConnector(self, message, queueId):
         if len(QueueService.getQueues(self.database)) == 0:
             self.bot.reply_to(message, "Нет ни одной очереди, как так то....")
@@ -49,7 +62,7 @@ class ReplaceHandlers(BaseHandler):
         if queueId == -1:
             queueId = QueueService.getLastQueue(self.database).id
 
-        self.runtimeInfoManager.sendBarrier.add('replace', message.from_user.id)
+        self.runtimeInfoManager.sendBarrier.add('replaceCertain', message.from_user.id)
         markup = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True, selective=True)
         subjectTitle = QueueService.getQueueById(self.database, queueId).subject.title
         subject: Subject = SubjectService.getSubjectByTitle(self.database, subjectTitle)
@@ -87,16 +100,22 @@ class ReplaceHandlers(BaseHandler):
                     self.bot.reply_to(message, "Успешно перезаписан на " + str(entryNum) + " место",
                                       reply_markup=types.ReplyKeyboardRemove(selective=True))
                 else:
-                    # Иначе блокируем человека и отправляем ему запрос с упоминанием
+                    # Иначе проверяем человека
                     replaceQueueMem = QueueService.getMemberInQueueByPlace(self.database, qId, entryNum)
                     chatRepMem = self.bot.get_chat_member(message.chat.id, replaceQueueMem.member.tgNum)
-                    self.bot.send_message(message.chat.id, '@' + chatRepMem.user.username
-                                          + ' вам предлагают поменяться в очереди\n'
-                                            ' от кого: ' + ' @' + chatCurMem.user.username + '\n'
-                                          + ' очередь: ' + str(
-                        QueueService.getQueueById(self.database, qId).subject.title) + '\n'
-                                          + ' ваше место: ' + str(replaceQueueMem.placeNumber) + '\n'
-                                          + ' предлагаемое место: ' + str(oldPlace))
+                    # if self.runtimeInfoManager.sendBarrier.check('replaceto', replaceQueueMem.member.tgNum):
+                    if not self.runtimeInfoManager.checkReplace(replaceQueueMem.member.id, qId):
+                        self.bot.reply_to(message, "Извините, этого человека уже есть запрос на смену места",
+                                          reply_markup=types.ReplyKeyboardRemove(selective=True))
+                    else:
+                        self.runtimeInfoManager.replaceRequests.append(ReplaceRequest(curMember.id, replaceQueueMem.member.id, qId))
+                        self.bot.send_message(message.chat.id, '@' + chatRepMem.user.username
+                                              + ' вам предлагают поменяться в очереди\n'
+                                                ' от кого: ' + ' @' + chatCurMem.user.username + '\n'
+                                              + ' очередь: ' + str(
+                            QueueService.getQueueById(self.database, qId).subject.title) + '\n'
+                                              + ' ваше место: ' + str(replaceQueueMem.placeNumber) + '\n'
+                                              + ' предлагаемое место: ' + str(oldPlace))
 
             self.replaceList.pop(message.from_user.id)
 
@@ -123,14 +142,13 @@ class ReplaceHandlers(BaseHandler):
                                       reply_markup=types.ReplyKeyboardRemove(selective=True))
                 else:
                     self.replaceConnector(message, queue.id)
-                    self.runtimeInfoManager.sendBarrier.add('replaceCertain', message.from_user.id)
+                    # self.runtimeInfoManager.sendBarrier.add('replaceCertain', message.from_user.id)
 
             else:
                 self.bot.reply_to(message, 'Очереди по этому предмету еще нет. Самое время создать ее!',
                                   reply_markup=types.ReplyKeyboardRemove(selective=True))
-
-        # TODO replace
+        #
         if self.runtimeInfoManager.sendBarrier.checkAndRemove('replace', message.from_user.id):
-            pass
+
             return
 

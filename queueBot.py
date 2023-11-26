@@ -83,6 +83,8 @@ commandHandlers: Dict[str, Callable[[telebot.types.Message], None]] = {
     '/removesubject': subjectHandlers.removesubjectCommand,
     '/removefrom': removeHandlers.removefromCommand,
     '/replaceto': replaceHandlers.replacetoCommand,
+    '/replace': replaceHandlers.replaceCommand,
+    '/reject': replaceHandlers.rejectCommand,
 
     '/start@queeeeueeee_bot': startCommand,
     '/help@queeeeueeee_bot': commandsList,
@@ -94,6 +96,10 @@ commandHandlers: Dict[str, Callable[[telebot.types.Message], None]] = {
     '/join@queeeeueeee_bot': qFun.joinCommand,
     '/subject@queeeeueeee_bot': subjectHandlers.subjectCommand,
     '/removesubject@queeeeueeee_bot': subjectHandlers.removesubjectCommand,
+    '/removefrom@queeeeueeee_bot': removeHandlers.removefromCommand,
+    '/replaceto@queeeeueeee_bot': replaceHandlers.replacetoCommand,
+    '/replace@queeeeueeee_bot': replaceHandlers.replaceCommand,
+    '/reject@queeeeueeee_bot': replaceHandlers.rejectCommand,
 }
 
 callbackHandlers: Dict[str, Callable[[telebot.types.CallbackQuery], None]] = {

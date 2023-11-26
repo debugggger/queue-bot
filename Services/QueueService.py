@@ -30,6 +30,14 @@ class QueueService:
         return count != 0
 
     @staticmethod
+    def isMemberInAnyQueue(database, memberId: int) -> bool:
+        with database.connection.cursor() as cur:
+            cur.execute("select count(queue_id) from queuemembers where member_id=%s",
+                        (memberId, ))
+            count = cur.fetchall()[0][0]
+        return count != 0
+
+    @staticmethod
     def getPlaceByMemberId(database, queueId: int, memberId: int) -> int:
         with database.connection.cursor() as cur:
             cur.execute("select place_number from queuemembers where queue_id=%s and member_id=%s", (queueId, memberId))
