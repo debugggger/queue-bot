@@ -57,7 +57,7 @@ class QueueFun(BaseHandler):
         )
         subjectTitle = QueueService.getQueueById(self.database, queueId).subject.title
         subject: Subject = SubjectService.getSubjectByTitle(self.database, subjectTitle)
-        self.bot.reply_to(message, "Выбрана очередь по " + subject.title + ":\n" + "Введи место для записи",
+        self.bot.reply_to(message, "Выбрана очередь по " + subject.title + ":\n" + "Выбери место для записи",
                           reply_markup=markup)
 
         self.joinList[message.from_user.id] = queueId
@@ -89,7 +89,8 @@ class QueueFun(BaseHandler):
                     QueueService.addToQueue(self.database, self.joinList[message.from_user.id], message.from_user.id,
                                             num, 1)
                     if num != entryNum:
-                        self.bot.reply_to(message, "Желаемое место уже занято. Ты записан на " + str(num) + " место")
+                        self.bot.reply_to(message, "Желаемое место уже занято или превышает количество человек, "
+                                                   "которые живут очередями. Ты записан на " + str(num) + " место")
                     else:
                         self.bot.reply_to(message, "Ты записан на " + str(num) + " место")
                     updateLastQueueText(self.bot, self.database, self.joinList[message.from_user.id],
