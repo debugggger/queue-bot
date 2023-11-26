@@ -1,7 +1,6 @@
 import datetime
 from typing import List, Dict
 
-
 import telebot
 
 
@@ -34,6 +33,14 @@ class SendBarrier:
             return False
         self.remove(key, tgId)
         return True
+
+
+class ReplaceRequest:
+    def __init__(self, fromId: int, toId: int, queueId: int):
+        self.fromId: int = fromId
+        self.toId: int = toId
+        self.queueId: int = queueId
+
 
 class TimeoutManager:
     def __init__(self, timeouts: Dict[str, datetime.timedelta]):
@@ -80,6 +87,7 @@ class TimeoutManager:
         else:
             return False
 
+
 class RuntimeInfoManager:
     def __init__(self):
         self.sendBarrier: SendBarrier = SendBarrier()
@@ -87,3 +95,17 @@ class RuntimeInfoManager:
             'show': datetime.timedelta(seconds=10),
         })
         self.lastQueueMessages: Dict[str, telebot.types.Message] = {}
+        self.replaceRequests: List[ReplaceRequest] = []
+
+    def checkReplace(self, memberId, queueId) -> bool:
+        for rr in self.replaceRequests:
+            if (memberId == rr.fromId or memberId == rr.toId) and queueId == rr.queueId:
+                return False
+        return True
+
+    def checkAndRemove(self, memberId) -> bool:
+        for i in range(len(self.replaceRequests)):
+            if memberId == self.replaceRequests[i].fromId or memberId == self.replaceRequests[i].toId:
+                self.replaceRequests.remove(self.replaceRequests[i])
+                return True
+        return False
