@@ -192,7 +192,7 @@ def handle_left_chat_member(message: telebot.types.Message):
     for q in QueueService.getQueues(botDB):
         updateLastQueueText(bot, botDB, q.id, runtimeInfoManager)
 
-    # TODO: отклонить все запросы на смену мест
+    runtimeInfoManager.checkAndRemove(member.id)
     MemberService.deleteMember(botDB, str(message.left_chat_member.id))
 
 bot.infinity_polling()

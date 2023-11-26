@@ -182,6 +182,9 @@ ALTER TABLE ONLY public.subjects ALTER COLUMN id_subject SET DEFAULT nextval('pu
 -- Data for Name: members; Type: TABLE DATA; Schema: public; Owner: queue_db_admin
 --
 
+INSERT INTO public.members (id_member, name, tg_num) VALUES (10, 'artas', '358317304');
+INSERT INTO public.members (id_member, name, tg_num) VALUES (111, 'dmitry', '702824966');
+INSERT INTO public.members (id_member, name, tg_num) VALUES (12, 'artem', '1200341412');
 
 
 --
@@ -200,27 +203,29 @@ ALTER TABLE ONLY public.subjects ALTER COLUMN id_subject SET DEFAULT nextval('pu
 -- Data for Name: subjects; Type: TABLE DATA; Schema: public; Owner: queue_db_admin
 --
 
+INSERT INTO public.subjects (id_subject, title) VALUES (2, 'trkpo');
+INSERT INTO public.subjects (id_subject, title) VALUES (3, 'oprkppim');
 
 
 --
 -- Name: members_id_member_seq; Type: SEQUENCE SET; Schema: public; Owner: queue_db_admin
 --
 
-SELECT pg_catalog.setval('public.members_id_member_seq', 1, false);
+SELECT pg_catalog.setval('public.members_id_member_seq', 12, true);
 
 
 --
 -- Name: queuesubjects_id_queue_seq; Type: SEQUENCE SET; Schema: public; Owner: queue_db_admin
 --
 
-SELECT pg_catalog.setval('public.queuesubjects_id_queue_seq', 1, false);
+SELECT pg_catalog.setval('public.queuesubjects_id_queue_seq', 13, true);
 
 
 --
 -- Name: subjects_id_subject_seq; Type: SEQUENCE SET; Schema: public; Owner: queue_db_admin
 --
 
-SELECT pg_catalog.setval('public.subjects_id_subject_seq', 1, false);
+SELECT pg_catalog.setval('public.subjects_id_subject_seq', 3, true);
 
 
 --
@@ -268,7 +273,7 @@ ALTER TABLE ONLY public.subjects
 --
 
 ALTER TABLE ONLY public.queuemembers
-    ADD CONSTRAINT "QueueMembers_Members_fk" FOREIGN KEY (member_id) REFERENCES public.members(id_member);
+    ADD CONSTRAINT "QueueMembers_Members_fk" FOREIGN KEY (member_id) REFERENCES public.members(id_member) ON DELETE CASCADE;
 
 
 --
@@ -276,7 +281,7 @@ ALTER TABLE ONLY public.queuemembers
 --
 
 ALTER TABLE ONLY public.queuemembers
-    ADD CONSTRAINT "QueueMembers_QueueSubjects_fk" FOREIGN KEY (queue_id) REFERENCES public.queuesubjects(id_queue);
+    ADD CONSTRAINT "QueueMembers_QueueSubjects_fk" FOREIGN KEY (queue_id) REFERENCES public.queuesubjects(id_queue) ON DELETE CASCADE;
 
 
 --
