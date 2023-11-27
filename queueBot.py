@@ -58,6 +58,7 @@ def possibilityCommand(message: telebot.types.Message):
 # removefrom - выход из очереди
 # reject - отклонение запроса смены мест
 # confirm - подтверждение запроса смены мест
+# removesubject - выход из очереди
 
 def commandsList(message):
     bot.send_message(message.chat.id,
@@ -72,6 +73,7 @@ def commandsList(message):
                      "/replaceto - смена мест c выбором очереди\n"
                      "/replace - смена места в последней очереди\n"
                      "/removefrom - выход из очереди\n"
+                     "/removesubject - выход из очереди\n"
                      "/reject - отклонение запроса смены мест\n"
                      "/confirm - подтверждение запроса смены мест\n")
 
