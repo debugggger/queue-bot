@@ -4,3 +4,4 @@ token.txt
 .env
 __pycache__
 venv
+.pytest_cache/

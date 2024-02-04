@@ -15,7 +15,7 @@ def checkSubjectTitle(title: str) -> bool:
     return bool(re.fullmatch('([A-Za-zА-Яа-яёЁ]+ ?)+', title)) and (len(title) <= 30)
 
 def checkMemberName(name: str) -> bool:
-    return bool(re.fullmatch('([A-Za-zА-Яа-яёЁ]+[ \-\']?)+', name)) and (len(name) <= 30)
+    return bool(re.fullmatch('([A-Za-zА-Яа-яёЁ]+[ -\']?)+', name)) and (len(name) <= 30)
 
 def checkMessage(message: telebot.types.Message, chatId=None, timeout=5) -> bool:
     if timeout is not None and time.time() - message.date > timeout:
