@@ -57,5 +57,3 @@ class SubjectService:
         with database.connection.cursor() as cur:
             cur.execute("delete from subjects where title=%s",
                         (title, ))
-
-

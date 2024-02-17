@@ -3,6 +3,7 @@ import datetime
 import telebot
 from telebot import types
 
+import utils
 from Entities import Subject
 from Requests.RuntimeInfoManager import RuntimeInfoManager, ReplaceRequest
 from Requests.BaseHandler import BaseHandler
@@ -10,7 +11,7 @@ from Services.MemberService import MemberService
 from Services.QueueService import QueueService
 from Services.SubjectService import SubjectService
 from db import Database
-from utils import updateLastQueueText
+from Requests.QueueFun import updateLastQueueText
 
 
 class ReplaceHandlers(BaseHandler):
@@ -110,16 +111,30 @@ class ReplaceHandlers(BaseHandler):
 
         self.replaceList[message.from_user.id] = queueId
 
+    # def checkNum(self, message):
+    #     try:
+    #         entryNum = int(message)
+    #         if entryNum <= 0:
+    #             entryNum = -1
+    #         return entryNum
+    #     except:
+    #         return -1
+
     def replaceTextHandler(self, message: telebot.types.Message):
         if self.runtimeInfoManager.sendBarrier.checkAndRemove('replaceCertain', message.from_user.id):
-            try:
-                entryNum = int(message.text)
-                if entryNum <= 0:
-                    self.bot.reply_to(message, "Введи корректное число")
-                    return
-            except:
+
+            entryNum = utils.checkNumPlace(message.text)
+            if entryNum == -1:
                 self.bot.reply_to(message, "Введи корректное число")
                 return
+            # try:
+            #     entryNum = int(message.text)
+            #     if entryNum <= 0:
+            #         self.bot.reply_to(message, "Введи корректное число")
+            #         return
+            # except:
+            #     self.bot.reply_to(message, "Введи корректное число")
+            #     return
 
             qId = self.replaceList[message.from_user.id]
             maxPlace = QueueService.getMaxPlaceNumber(self.database, qId)
@@ -190,4 +205,3 @@ class ReplaceHandlers(BaseHandler):
         if self.runtimeInfoManager.sendBarrier.checkAndRemove('replace', message.from_user.id):
 
             return
-

@@ -8,14 +8,27 @@ from Requests.RuntimeInfoManager import RuntimeInfoManager
 from Services.QueueService import QueueService
 
 
+def checkNumPlace(message):
+        try:
+            entryNum = int(message)
+            if entryNum <= 0:
+                entryNum = -1
+            return entryNum
+        except:
+            return -1
+
+
 def removeBlank(string: str) -> str:
     return ' '.join(string.split())
+
 
 def checkSubjectTitle(title: str) -> bool:
     return bool(re.fullmatch('([A-Za-zА-Яа-яёЁ]+ ?)+', title)) and (len(title) <= 30)
 
+
 def checkMemberName(name: str) -> bool:
-    return bool(re.fullmatch('([A-Za-zА-Яа-яёЁ]+[ -\']?)+', name)) and (len(name) <= 30)
+    return bool(re.fullmatch('([A-Za-zА-Яа-яёЁ]+[ \'-]?)+', name)) and (len(name) <= 30)
+
 
 def checkMessage(message: telebot.types.Message, chatId=None, timeout=5) -> bool:
     if timeout is not None and time.time() - message.date > timeout:
@@ -25,6 +38,7 @@ def checkMessage(message: telebot.types.Message, chatId=None, timeout=5) -> bool
         print(f'failed chatId for \'{message.text}\'')
         return False
     return True
+
 
 def formQueueText(queue: Queue):
     qList = {}
@@ -39,16 +53,3 @@ def formQueueText(queue: Queue):
 
     return "Очередь по " + queue.subject.title + ":\n" + resStr
 
-def updateLastQueueText(bot: telebot.TeleBot, database, queueId: int, runtimeInfoManager: RuntimeInfoManager):
-    queue = QueueService.getQueueById(database, queueId)
-
-    if queue.subject.title not in runtimeInfoManager.lastQueueMessages:
-        return
-
-    msg = runtimeInfoManager.lastQueueMessages[queue.subject.title]
-    msgNewText = formQueueText(queue)
-    
-    if msgNewText == msg.text:
-        return
-
-    bot.edit_message_text(msgNewText, msg.chat.id, msg.id)

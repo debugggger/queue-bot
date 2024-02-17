@@ -1,2 +1,2 @@
-python -m pytest -m unit
+python -m pytest -m unit --cov
 pause

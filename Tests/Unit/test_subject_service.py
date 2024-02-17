@@ -21,7 +21,7 @@ def test_get_subjects(database):
         assert isinstance(subject, Subject)
 
 def test_get_subject_by_id(database):
-    subject_id = 8
+    subject_id = 9
     subject = SubjectService.getSubjectById(database, subject_id)
     assert isinstance(subject, Subject)
 

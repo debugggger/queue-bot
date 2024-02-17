@@ -6,7 +6,7 @@ from Requests.BaseHandler import BaseHandler
 from Services.MemberService import MemberService
 from Services.QueueService import QueueService
 from Services.SubjectService import SubjectService
-from utils import updateLastQueueText
+from Requests.QueueFun import updateLastQueueText
 
 
 class RemoveHandlers(BaseHandler):

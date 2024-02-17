@@ -1,7 +1,7 @@
 import pytest
 import re
 from datetime import datetime
-from utils import checkSubjectTitle, removeBlank, formQueueText
+from utils import checkSubjectTitle, removeBlank, formQueueText, checkNumPlace
 from Entities.Member import Member
 from Entities.Queue import Queue, QueueMember
 from Entities.Subject import Subject
@@ -243,3 +243,9 @@ def test_form_queue_text_empty_subject():
     member = Member(id=1, name="chel", tgNum=123)
     queue = Queue(id=1, subject=Subject(id=1, title=""), isLast=True, members=[QueueMember(member=member, entryTime=datetime.now(), placeNumber=1, entryType="Type")])
     assert formQueueText(queue) == "Очередь по :\n1 - chel\n"
+
+@pytest.mark.unit
+def test_check_place():
+    assert checkNumPlace("1wefahsfsdhn") == -1
+    assert checkNumPlace("-4") == -1
+    assert checkNumPlace("1") == -1

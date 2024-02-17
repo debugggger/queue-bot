@@ -13,11 +13,12 @@ from Services.QueueService import QueueService
 from db import Database
 
 from Requests.QueueEntity import QueueEntity
-from Requests.QueueFun import QueueFun
+from Requests.QueueFun import QueueFun, updateLastQueueText
 from Requests.SubjectHandlers import SubjectHandlers
 from Requests.UserHandlers import UserHandlers
 from Requests.RuntimeInfoManager import RuntimeInfoManager
-from utils import checkMessage, updateLastQueueText
+from utils import checkMessage
+
 
 load_dotenv()
 
