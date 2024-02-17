@@ -52,6 +52,7 @@ class SubjectHandlers(BaseHandler):
             if not SubjectService.isSubjectExist(self.database, subjectTitle):
                 self.bot.reply_to(message, 'Такого предмета и так не было. Зачем удалять то...',
                                   reply_markup=km.Remove)
+                return
 
             subject = SubjectService.getSubjectByTitle(self.database, subjectTitle)
             if QueueService.isQueueExist(self.database, subject.id):
