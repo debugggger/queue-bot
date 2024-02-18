@@ -1,0 +1,2 @@
+[run]
+omit = *test*, ./Entities/*, __init__.py, db.py

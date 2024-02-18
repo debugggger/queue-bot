@@ -248,4 +248,4 @@ def test_form_queue_text_empty_subject():
 def test_check_place():
     assert checkNumPlace("1wefahsfsdhn") == -1
     assert checkNumPlace("-4") == -1
-    assert checkNumPlace("1") == -1
+    assert checkNumPlace("1") != -1

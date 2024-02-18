@@ -1,43 +1,49 @@
 import pytest
 from Entities.Subject import Subject
 from Services.SubjectService import SubjectService
-from db import Database
+from dbTest import DatabaseTest
 
 
-@pytest.fixture
-def database():
-    return Database()
+@pytest.fixture(scope='function')
+def databaseTest():
+    return DatabaseTest()
 
-def test_is_subject_exist(database):
+
+@pytest.mark.unit
+def test_is_subject_exist(databaseTest):
     subject_title = "тркпо"
-    assert not SubjectService.isSubjectExist(database, subject_title)
-    SubjectService.addSubject(database, subject_title)
-    assert SubjectService.isSubjectExist(database, subject_title)
+    assert not SubjectService.isSubjectExist(databaseTest, subject_title)
+    SubjectService.addSubject(databaseTest, subject_title)
+    assert SubjectService.isSubjectExist(databaseTest, subject_title)
 
-def test_get_subjects(database):
-    subjects = SubjectService.getSubjects(database)
+@pytest.mark.unit
+def test_get_subjects(databaseTest):
+    subjects = SubjectService.getSubjects(databaseTest)
     assert isinstance(subjects, list)
     for subject in subjects:
         assert isinstance(subject, Subject)
 
-def test_get_subject_by_id(database):
-    subject_id = 9
-    subject = SubjectService.getSubjectById(database, subject_id)
+@pytest.mark.unit
+def test_get_subject_by_id(databaseTest):
+    subject_id = 2
+    subject = SubjectService.getSubjectById(databaseTest, subject_id)
     assert isinstance(subject, Subject)
 
-def test_get_subject_by_title(database):
-    subject_title = "тркпо"
-    subject = SubjectService.getSubjectByTitle(database, subject_title)
+@pytest.mark.unit
+def test_get_subject_by_title(databaseTest):
+    subject_title = "trkpo"
+    subject = SubjectService.getSubjectByTitle(databaseTest, subject_title)
     assert isinstance(subject, Subject)
 
-def test_add_subject(database):
+@pytest.mark.unit
+def test_add_subject(databaseTest):
     subject_title = "опркимаргшшваир"
-    SubjectService.addSubject(database, subject_title)
-    assert SubjectService.isSubjectExist(database, subject_title)
+    SubjectService.addSubject(databaseTest, subject_title)
+    assert SubjectService.isSubjectExist(databaseTest, subject_title)
 
-def test_remove_subject(database):
+@pytest.mark.unit
+def test_remove_subject(databaseTest):
     subject_title = "опркимаргшшваир"
-    # SubjectService.addSubject(database, subject_title)
-    # assert SubjectService.isSubjectExist(database, subject_title)
-    SubjectService.removeSubject(database, subject_title)
-    assert not SubjectService.isSubjectExist(database, subject_title)
+    SubjectService.addSubject(databaseTest, subject_title)
+    SubjectService.removeSubject(databaseTest, subject_title)
+    assert not SubjectService.isSubjectExist(databaseTest, subject_title)
