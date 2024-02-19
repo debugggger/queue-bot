@@ -76,8 +76,8 @@ def test_check_and_update_with_inner_key_none():
     timeout_manager = TimeoutManager(timeouts)
 
     assert timeout_manager.checkAndUpdate('command1', None, datetime.datetime.now())
-    assert not timeout_manager.checkAndUpdate('command1', None, datetime.datetime.now() + datetime.timedelta(seconds=5))
-    assert timeout_manager.checkAndUpdate('command1', None, datetime.datetime.now() + datetime.timedelta(seconds=15))
+    assert not timeout_manager.checkAndUpdate('command1', None, datetime.datetime.now() + datetime.timedelta(seconds=9))
+    assert timeout_manager.checkAndUpdate('command1', None, datetime.datetime.now() + datetime.timedelta(seconds=11))
 
 
 # (9) Проверка и обновление с неправильным ключом команды

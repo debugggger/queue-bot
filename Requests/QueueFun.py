@@ -8,8 +8,17 @@ from Services.QueueService import QueueService
 from Services.SubjectService import SubjectService
 from Requests.BaseHandler import BaseHandler
 from db import Database
-from utils import formQueueText, updateLastQueueText
+from utils import formQueueText
 
+def updateLastQueueText(bot: telebot.TeleBot, database, queueId: int, runtimeInfoManager: RuntimeInfoManager):
+    queue = QueueService.getQueueById(database, queueId)
+    if queue.subject.title not in runtimeInfoManager.lastQueueMessages:
+        return
+    msg = runtimeInfoManager.lastQueueMessages[queue.subject.title]
+    msgNewText = formQueueText(queue)
+    if msgNewText == msg.text:
+        return
+    bot.edit_message_text(msgNewText, msg.chat.id, msg.id)
 
 class QueueFun(BaseHandler):
     def __init__(self, bot: telebot.TeleBot, database: Database, runtimeInfoManager: RuntimeInfoManager):
@@ -94,7 +103,6 @@ class QueueFun(BaseHandler):
 
                 if QueueService.isPlaceEmpty(self.database, num, self.joinList[message.from_user.id],
                                              MemberService.getMemberByTgNum(self.database, message.from_user.id).id):
-
                     QueueService.addToQueue(self.database, self.joinList[message.from_user.id], message.from_user.id,
                                             num, 1)
                     if num != entryNum:
@@ -135,7 +143,6 @@ class QueueFun(BaseHandler):
                 self.joinList.pop(message.from_user.id)
                 self.bot.reply_to(message, "Ты уже записан в эту очередь, свободных мест для записи нет. "
                                            "Для смены места воспользуйся командой /replace")
-
             return
 
         # Обработка выбора очереди по команде /jointo
@@ -143,7 +150,6 @@ class QueueFun(BaseHandler):
             if not message.text.startswith('Очередь по '):
                 self.bot.reply_to(message, 'Команда отменена', reply_markup=types.ReplyKeyboardRemove(selective=True))
                 return
-
             subjectTitle = message.text.removeprefix('Очередь по ')
 
             if not SubjectService.isSubjectExist(self.database, subjectTitle):
