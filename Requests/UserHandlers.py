@@ -6,22 +6,22 @@ from db import Database
 from Requests.RuntimeInfoManager import RuntimeInfoManager
 from utils import checkMemberName, removeBlank
 from Requests.BaseHandler import BaseHandler
+import TgUtil.KeyboardMarkups as km
 
 class UserHandlers(BaseHandler):
     def memberCommand(self, message: telebot.types.Message) -> None:
-        markup = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True, selective=True).add("Ввод", "❌ Отмена")
-        self.bot.reply_to(message, "Для продолжения нажми кнопку ввод", reply_markup=markup)
+        self.bot.reply_to(message, "Для продолжения нажми кнопку ввод", reply_markup=km.EnterCancel)
         self.runtimeInfoManager.sendBarrier.add('member1', message.from_user.id)
 
     def setNameTextHandler(self, message: telebot.types.Message) -> None:
         if self.runtimeInfoManager.sendBarrier.checkAndRemove('member1', message.from_user.id):
             if message.text == "Ввод":
                 self.bot.reply_to(message, 'Введи имя, которое будет отображаться при выводе сообщений',
-                                  reply_markup=types.ReplyKeyboardRemove(selective=True))
+                                  reply_markup=km.Remove)
                 self.runtimeInfoManager.sendBarrier.add('member2', message.from_user.id)
             else:
                 self.bot.reply_to(message, 'Ввод отображаемого имени отменен',
-                                  reply_markup=types.ReplyKeyboardRemove(selective=True))
+                                  reply_markup=km.Remove)
             return
         
         if self.runtimeInfoManager.sendBarrier.checkAndRemove('member2', message.from_user.id):
