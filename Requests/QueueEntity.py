@@ -9,6 +9,7 @@ from Services.MemberService import MemberService
 from Services.QueueService import QueueService
 from Services.SubjectService import SubjectService
 from utils import formQueueText, removeBlank, checkSubjectTitle
+import TgUtil.KeyboardMarkups as km
 
 
 class QueueEntity(BaseHandler):
@@ -55,29 +56,29 @@ class QueueEntity(BaseHandler):
         if self.runtimeInfoManager.sendBarrier.checkAndRemove('create', message.from_user.id):
             if message.text == '❌ Отмена':
                 self.bot.reply_to(message, 'Команда отменена',
-                                  reply_markup=types.ReplyKeyboardRemove(selective=True))
+                                  reply_markup=km.Remove)
                 return
 
             if SubjectService.isSubjectExist(self.database, message.text):
                 subject = SubjectService.getSubjectByTitle(self.database, message.text)
                 if QueueService.isQueueExist(self.database, subject.id):
                     self.bot.reply_to(message, 'Очередь по этому предмету уже существует',
-                                      reply_markup=types.ReplyKeyboardRemove(selective=True))
+                                      reply_markup=km.Remove)
                 else:
                     QueueService.createQueue(self.database, subject.id)
-                    self.bot.reply_to(message, "Создана очередь по " + subject.title)
+                    self.bot.reply_to(message, "Создана очередь по " + subject.title, reply_markup=km.Remove)
             else:
                 self.bot.reply_to(message, 'Такого предмета нет',
-                                  reply_markup=types.ReplyKeyboardRemove(selective=True))
+                                  reply_markup=km.Remove)
 
         if self.runtimeInfoManager.sendBarrier.checkAndRemove('delete', message.from_user.id):
             if not message.text.startswith('Очередь по '):
-                self.bot.reply_to(message, 'Команда отменена', reply_markup=types.ReplyKeyboardRemove(selective=True))
+                self.bot.reply_to(message, 'Команда отменена', reply_markup=km.Remove)
                 return
 
             subjectTitle = message.text.removeprefix('Очередь по ')
             if not SubjectService.isSubjectExist(self.database, subjectTitle):
-                self.bot.reply_to(message, 'Такого предмета не сущесвует', reply_markup=types.ReplyKeyboardRemove(selective=True))
+                self.bot.reply_to(message, 'Такого предмета не сущесвует', reply_markup=km.Remove)
                 return
             subject: Subject = SubjectService.getSubjectByTitle(self.database, subjectTitle)
 
