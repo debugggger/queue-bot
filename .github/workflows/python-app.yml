@@ -31,3 +31,11 @@ jobs:
     - name: Run integration tests
       run: |
         pytest -m integration
+    - name: Run system tests
+      env:
+        api_id: ${{ secrets.API_ID }}
+        api_hash: ${{ secrets.API_HASH }}
+        session_string: ${{ secrets.API_SESSION }}
+        chat_id: ${{ secrets.CHAT_ID }}
+      run: |
+        pytest -m system
