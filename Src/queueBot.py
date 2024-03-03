@@ -37,6 +37,7 @@ replaceHandlers = ReplaceHandlers(bot, botDB, runtimeInfoManager)
 qFun = QueueFun(bot, botDB, runtimeInfoManager)
 qEntity = QueueEntity(bot, botDB, runtimeInfoManager)
 
+
 def possibilityCommand(message: telebot.types.Message):
     bot.send_message(message.chat.id,
                      "Бот, который поможет тебе не потеряться в бесконечных "
