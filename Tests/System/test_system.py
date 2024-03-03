@@ -13,9 +13,9 @@ def checkLastMessage(client, chat_id, text: str):
     for message in client.get_chat_history(chat_id, limit=1):
         assert message.text == text
 
-def checkResponce(client, chat_id, text: str, responceText: str, delay=DELAY):
+def checkResponce(client, chat_id, text: str, responceText: str, DELAY=DELAY):
     client.send_message(chat_id, text)
-    time.sleep(delay)
+    time.sleep(DELAY)
     checkLastMessage(client, chat_id, responceText)
 
 
@@ -44,6 +44,7 @@ def test_subject_incorrectTitle(client, chat_id):
     checkResponce(client, chat_id, '/subject', 'Введи название нового предмета')
     checkResponce(client, chat_id, 'test-subj', 'Название предмета некорректно.\nИспользуйте не более 30 символов русского и английского алфавита.')
 
+
 @pytest.mark.system
 def test_subject(client, chat_id):
     checkResponce(client, chat_id, '/subject', 'Введи название нового предмета')
@@ -55,10 +56,12 @@ def test_subject(client, chat_id):
     time.sleep(DELAY)
     client.send_message(chat_id, 'subjj')
 
+
 @pytest.mark.system
 def test_removesubject_cancel(client, chat_id):
     checkResponce(client, chat_id, '/removesubject', 'Удалить предмет')
     checkResponce(client, chat_id, '❌ Отмена', 'Команда отменена')
+
 
 @pytest.mark.system
 def test_valid_member(client, chat_id):
@@ -72,6 +75,7 @@ def test_valid_member(client, chat_id):
     time.sleep(DELAY)
     for message in client.get_chat_history(chat_id, limit=1):
         assert message.text == 'Отображаемое имя установлено'
+
 
 @pytest.mark.system
 def test_invalid_name(client, chat_id):
@@ -87,6 +91,7 @@ def test_invalid_name(client, chat_id):
         assert message.text == ('Отображаемое имя некорректно.\n'
                                       'Используйте не более 30 символов русского и английского алфавита.'
                                       'Также дефис, апостроф, пробел (но не более одного такого символа подряд).')
+
 
 @pytest.mark.system
 def test_delete(client, chat_id):
@@ -112,10 +117,6 @@ def test_delete(client, chat_id):
     time.sleep(DELAY)
     client.send_message(chat_id, 'Очередь по subjj')
 
-@pytest.fixture(scope="session")
-def chat_id():
-    return int(os.getenv('chat_id'))
-
 
 @pytest.mark.system
 def test_start(client, chat_id):
@@ -123,7 +124,7 @@ def test_start(client, chat_id):
     expected = ("Привет! Я бот для составления очередей.\n"
                 "Ты можешь воспользоваться следующими командами, "
                 "чтобы более подробно узнать что я умею:")
-    time.sleep(delay)
+    time.sleep(DELAY)
     for message in client.get_chat_history(chat_id, limit=1):
         assert message.text == expected
 
@@ -132,9 +133,10 @@ def test_start(client, chat_id):
 def test_show_empty(client, chat_id):
     client.send_message(chat_id, '/show')
     expected = ("Еще нет никаких очередей. Радуйся!")
-    time.sleep(delay)
+    time.sleep(DELAY)
     for message in client.get_chat_history(chat_id, limit=1):
         assert message.text == expected
+
 
 @pytest.mark.system
 def test_delete_cancel(client, chat_id):
@@ -178,6 +180,7 @@ def test_delete_cancel(client, chat_id):
     time.sleep(DELAY)
     client.send_message(chat_id, 'Очередь по incorrect_subj_test')
 
+
 @pytest.mark.system
 def test_help(client, chat_id):
     client.send_message(chat_id, '/help')
@@ -198,6 +201,8 @@ def test_help(client, chat_id):
                      "/reject - отклонение запроса смены мест\n"
                      "/confirm - подтверждение запроса смены мест")
 
+
+@pytest.mark.system
 def test_removesubject(client, chat_id):
     client.send_message(chat_id, '/subject')
     time.sleep(DELAY)
@@ -206,43 +211,45 @@ def test_removesubject(client, chat_id):
     checkResponce(client, chat_id, '/removesubject', 'Удалить предмет')
     checkResponce(client, chat_id, 'subjj', 'Предмет удален')
 
+
+@pytest.mark.system
 def test_show(client, chat_id):
     client.send_message(chat_id, '/subject')
-    time.sleep(delay)
+    time.sleep(DELAY)
     client.send_message(chat_id, 'subject for show')
-    time.sleep(delay)
+    time.sleep(DELAY)
     client.send_message(chat_id, '/create')
     expected = ("По какому предмету ты хочешь создать очередь?")
-    time.sleep(delay)
+    time.sleep(DELAY)
     for message in client.get_chat_history(chat_id, limit=1):
         assert message.text == expected
     client.send_message(chat_id, 'subject for show')
     expected = ("Создана очередь по subject for show")
-    time.sleep(delay)
+    time.sleep(DELAY)
     for message in client.get_chat_history(chat_id, limit=1):
         assert message.text == expected
     client.send_message(chat_id, '/show')
-    time.sleep(delay)
+    time.sleep(DELAY)
     client.send_message(chat_id, 'subject for show')
     expected = ("Очередь по subject for show:")
     for message in client.get_chat_history(chat_id, limit=1):
         assert message.text == expected
 
     client.send_message(chat_id, '/delete')
-    time.sleep(delay)
+    time.sleep(DELAY)
     client.send_message(chat_id, 'Очередь по subject for show')
-    time.sleep(delay)
+    time.sleep(DELAY)
     client.send_message(chat_id, '/removesubject')
-    time.sleep(delay)
+    time.sleep(DELAY)
     client.send_message(chat_id, 'subject for show')
-    time.sleep(delay)
+    time.sleep(DELAY)
 
 
 @pytest.mark.system
 def test_confirm_empty(client, chat_id):
     client.send_message(chat_id, '/confirm')
     expected = ("Извините, у вас еще нет запросов на смену места")
-    time.sleep(delay)
+    time.sleep(DELAY)
     for message in client.get_chat_history(chat_id, limit=1):
         assert message.text == expected
 
@@ -251,7 +258,7 @@ def test_confirm_empty(client, chat_id):
 def test_reject_empty(client, chat_id):
     client.send_message(chat_id, '/reject')
     expected = ("Ты еще не записан ни в одну очередь. Ух, ты!")
-    time.sleep(delay)
+    time.sleep(DELAY)
     for message in client.get_chat_history(chat_id, limit=1):
         assert message.text == expected
 
@@ -260,12 +267,12 @@ def test_reject_empty(client, chat_id):
 def test_create_cancel(client, chat_id):
     client.send_message(chat_id, '/create')
     expected = ("По какому предмету ты хочешь создать очередь?")
-    time.sleep(delay)
+    time.sleep(DELAY)
     for message in client.get_chat_history(chat_id, limit=1):
         assert message.text == expected
     client.send_message(chat_id, '❌ Отмена')
     expected = ("Команда отменена")
-    time.sleep(delay)
+    time.sleep(DELAY)
     for message in client.get_chat_history(chat_id, limit=1):
         assert message.text == expected
 
@@ -273,24 +280,24 @@ def test_create_cancel(client, chat_id):
 @pytest.mark.system
 def test_create_correct(client, chat_id):
     client.send_message(chat_id, '/subject')
-    time.sleep(delay)
+    time.sleep(DELAY)
     client.send_message(chat_id, 'subject for create')
-    time.sleep(delay)
+    time.sleep(DELAY)
     client.send_message(chat_id, '/create')
     expected = ("По какому предмету ты хочешь создать очередь?")
-    time.sleep(delay)
+    time.sleep(DELAY)
     for message in client.get_chat_history(chat_id, limit=1):
         assert message.text == expected
     client.send_message(chat_id, 'subject for create')
     expected = ("Создана очередь по subject for create")
-    time.sleep(delay)
+    time.sleep(DELAY)
     for message in client.get_chat_history(chat_id, limit=1):
         assert message.text == expected
     client.send_message(chat_id, '/delete')
-    time.sleep(delay)
+    time.sleep(DELAY)
     client.send_message(chat_id, 'Очередь по subject for create')
-    time.sleep(delay)
+    time.sleep(DELAY)
     client.send_message(chat_id, '/removesubject')
-    time.sleep(delay)
+    time.sleep(DELAY)
     client.send_message(chat_id, 'subject for create')
-    time.sleep(delay)
+    time.sleep(DELAY)
