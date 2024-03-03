@@ -1,6 +1,6 @@
 import pytest
 import re
-from Src.utils import checkMemberName
+from utils import checkMemberName
 
 @pytest.mark.unit
 def test_valid_member_name():

@@ -1,5 +1,5 @@
 import pytest
-from Src.Requests.RuntimeInfoManager import RuntimeInfoManager, ReplaceRequest
+from Requests.RuntimeInfoManager import RuntimeInfoManager, ReplaceRequest
 import datetime
 
 @pytest.fixture

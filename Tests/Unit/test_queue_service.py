@@ -1,7 +1,7 @@
 import pytest
 from datetime import datetime
-from Src.Services.QueueService import QueueService
-from Src.Entities.Queue import *
+from Services.QueueService import QueueService
+from Entities.Queue import *
 from dbTest import DatabaseTest
 
 

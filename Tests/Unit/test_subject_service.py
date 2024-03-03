@@ -1,6 +1,6 @@
 import pytest
-from Src.Entities.Subject import Subject
-from Src.Services.SubjectService import SubjectService
+from Entities.Subject import Subject
+from Services.SubjectService import SubjectService
 from dbTest import DatabaseTest
 
 

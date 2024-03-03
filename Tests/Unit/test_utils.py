@@ -1,10 +1,10 @@
 import pytest
 import re
 from datetime import datetime
-from Src.utils import checkSubjectTitle, removeBlank, formQueueText, checkNumPlace
-from Src.Entities.Member import Member
-from Src.Entities.Queue import Queue, QueueMember
-from Src.Entities.Subject import Subject
+from utils import checkSubjectTitle, removeBlank, formQueueText, checkNumPlace
+from Entities.Member import Member
+from Entities.Queue import Queue, QueueMember
+from Entities.Subject import Subject
 
 
 # removeBlank
