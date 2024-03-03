@@ -5,9 +5,9 @@ name: Python application
 
 on:
   push:
-    branches: [ "main", "dev" ]
+    branches: [ "main", "test/integration" ]
   pull_request:
-    branches: [ "main", "dev" ]
+    branches: [ "main" ]
 
 permissions:
   contents: read
@@ -28,14 +28,12 @@ jobs:
         python -m pip install --upgrade pip
         pip install flake8 pytest
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-    - name: Run integration tests
+    - name: Lint with flake8
       run: |
-        pytest -m integration
-    - name: Run system tests
-      env:
-        api_id: ${{ secrets.API_ID }}
-        api_hash: ${{ secrets.API_HASH }}
-        session_string: ${{ secrets.API_SESSION }}
-        chat_id: ${{ secrets.CHAT_ID }}
+        # stop the build if there are Python syntax errors or undefined names
+        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+        # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
+        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+    - name: Test with pytest
       run: |
-        pytest -m system
+        pytest

@@ -1,5 +1,0 @@
-pyTelegramBotAPI
-python-dotenv
-psycopg2
-tgcrypto
-pyrogram
