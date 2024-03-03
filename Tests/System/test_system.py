@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 import os
 
 
-DELAY = 0.2
+DELAY = 0.3
 
 def checkLastMessage(client, chat_id, text: str):
     for message in client.get_chat_history(chat_id, limit=1):
@@ -231,6 +231,7 @@ def test_show(client, chat_id):
     client.send_message(chat_id, '/show')
     time.sleep(DELAY)
     client.send_message(chat_id, 'subject for show')
+    time.sleep(DELAY)
     expected = ("Очередь по subject for show:")
     for message in client.get_chat_history(chat_id, limit=1):
         assert message.text == expected
