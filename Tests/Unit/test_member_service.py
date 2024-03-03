@@ -1,6 +1,6 @@
 import pytest
-from Entities.Member import Member
-from Services.MemberService import MemberService
+from Src.Entities.Member import Member
+from Src.Services.MemberService import MemberService
 
 from dbTest import DatabaseTest
 

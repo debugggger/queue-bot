@@ -4,9 +4,9 @@ from dotenv import load_dotenv
 import os
 from datetime import datetime
 
-from Entities.Member import Member
-from Entities.Subject import Subject
-from Services.MemberService import MemberService
+from Src.Entities.Member import Member
+from Src.Entities.Subject import Subject
+from Src.Services.MemberService import MemberService
 
 
 class DatabaseTest:

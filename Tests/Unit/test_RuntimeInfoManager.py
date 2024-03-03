@@ -1,5 +1,5 @@
 import pytest
-from Requests.RuntimeInfoManager import SendBarrier
+from Src.Requests.RuntimeInfoManager import SendBarrier
 
 
 # SendBarrier

@@ -1,6 +1,6 @@
 import datetime
 import pytest
-from Requests.RuntimeInfoManager import TimeoutManager
+from Src.Requests.RuntimeInfoManager import TimeoutManager
 
 
 # (1) Инициализация TimeoutManager

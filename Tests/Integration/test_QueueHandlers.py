@@ -1,5 +1,6 @@
-﻿from unittest.mock import Mock, patch
-import pytest
+﻿import pytest
+from unittest.mock import Mock, patch
+
 from Entities.Subject import Subject
 from Requests.QueueEntity import QueueEntity
 from Requests.RuntimeInfoManager import RuntimeInfoManager
