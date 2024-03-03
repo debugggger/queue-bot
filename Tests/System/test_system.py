@@ -108,7 +108,7 @@ def test_delete(client, chat_id):
     for message in client.get_chat_history(chat_id, limit=1):
         assert message.text == 'Очередь удалена'
 
-    client.send_message(chat_id, '/reemovesubject')
+    client.send_message(chat_id, '/removesubject')
     time.sleep(DELAY)
     client.send_message(chat_id, 'Очередь по subjj')
 
@@ -146,11 +146,11 @@ def test_delete_cancel(client, chat_id):
     for message in client.get_chat_history(chat_id, limit=1):
         assert message.text == 'Команда отменена'
 
-    client.send_message(chat_id, '/reemovesubject')
+    client.send_message(chat_id, '/removesubject')
     time.sleep(DELAY)
     client.send_message(chat_id, 'Очередь по subjj')
     time.sleep(DELAY)
-    client.send_message(chat_id, '/reemovesubject')
+    client.send_message(chat_id, '/removesubject')
     time.sleep(DELAY)
     client.send_message(chat_id, 'Очередь по incorrect_subj_test')
 
