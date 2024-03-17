@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 import os
 
 
-DELAY = 0.3
+DELAY = 0.4
 
 def checkLastMessage(client, chat_id, text: str):
     for message in client.get_chat_history(chat_id, limit=1):
