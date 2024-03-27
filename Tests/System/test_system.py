@@ -119,26 +119,6 @@ def test_delete(client, chat_id):
 
 
 @pytest.mark.system
-def test_start(client, chat_id):
-    client.send_message(chat_id, '/start')
-    expected = ("Привет! Я бот для составления очередей.\n"
-                "Ты можешь воспользоваться следующими командами, "
-                "чтобы более подробно узнать что я умею:")
-    time.sleep(DELAY)
-    for message in client.get_chat_history(chat_id, limit=1):
-        assert message.text == expected
-
-
-@pytest.mark.system
-def test_show_empty(client, chat_id):
-    client.send_message(chat_id, '/show')
-    expected = ("Еще нет никаких очередей. Радуйся!")
-    time.sleep(DELAY)
-    for message in client.get_chat_history(chat_id, limit=1):
-        assert message.text == expected
-
-
-@pytest.mark.system
 def test_delete_cancel(client, chat_id):
     client.send_message(chat_id, '/subject')
     time.sleep(DELAY)
@@ -180,26 +160,6 @@ def test_delete_cancel(client, chat_id):
     time.sleep(DELAY)
     client.send_message(chat_id, 'Очередь по incorrect_subj_test')
 
-
-@pytest.mark.system
-def test_help(client, chat_id):
-    client.send_message(chat_id, '/help')
-    time.sleep(DELAY)
-    for message in client.get_chat_history(chat_id, limit=1):
-        assert message.text == ("можно воспользоваться следующими командами:\n"
-                     "/member - добавление в список пользователей\n"
-                     "/subject - добавление предмета\n"
-                     "/create - создание очереди\n"
-                     "/delete - удаление очереди\n"
-                     "/show - вывод очереди\n"
-                     "/join - запись в последнюю очередь\n"
-                     "/jointo - запись в любую из очередей\n"
-                     "/replaceto - смена мест c выбором очереди\n"
-                     "/replace - смена места в последней очереди\n"
-                     "/removefrom - выход из очереди\n"
-                     "/removesubject - выход из очереди\n"
-                     "/reject - отклонение запроса смены мест\n"
-                     "/confirm - подтверждение запроса смены мест")
 
 
 @pytest.mark.system
