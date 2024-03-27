@@ -13,8 +13,17 @@ bot_id = int(os.getenv('bot_id'))
 chat_id = int(os.getenv('chat_id'))
 
 
+DELAY = 0.5
 
-def checkResponce(client, chat_id, text: str, responceText: str, timeout = 1):
+def waitBotMessage(client):
+    while next(client.get_chat_history(chat_id, limit=1)).from_user.id != bot_id:
+        time.sleep(0.3)
+
+def sendAndWaitAny(client, text: str):
+    client.send_message(chat_id, text)
+    waitBotMessage(client)
+
+def checkResponce(client, text: str, responceText: str, timeout = 30):
     lastMessage = next(client.get_chat_history(chat_id, limit=1))
     client.send_message(chat_id, text)
     startTime = time.time()
@@ -25,6 +34,7 @@ def checkResponce(client, chat_id, text: str, responceText: str, timeout = 1):
         if time.time() - startTime > timeout:
             assert False
             break
+        time.sleep(0.3)
     assert message.text == responceText
 
 def create_test_subj(client, chat_id):
@@ -79,32 +89,24 @@ def client2():
 
 @pytest.mark.system
 def test_subject_incorrectTitle(client):
-    checkResponce(client, chat_id, '/subject', 'Введи название нового предмета')
-    checkResponce(client, chat_id, 'test-subj', 'Название предмета некорректно.\nИспользуйте не более 30 символов русского и английского алфавита.')
+    checkResponce(client, '/subject', 'Введи название нового предмета')
+    checkResponce(client, 'test-subj', 'Название предмета некорректно.\nИспользуйте не более 30 символов русского и английского алфавита.')
 
 @pytest.mark.system
 def test_subject(client):
-    checkResponce(client, chat_id, '/subject', 'Введи название нового предмета')
-    checkResponce(client, chat_id, 'subjj', 'Предмет subjj добавлен')
-    checkResponce(client, chat_id, '/subject', 'Введи название нового предмета')
-    checkResponce(client, chat_id, 'subjj', 'Предмет subjj уже существует')
+    checkResponce(client, '/subject', 'Введи название нового предмета')
+    checkResponce(client, 'subjj', 'Предмет subjj добавлен')
+    checkResponce(client, '/subject', 'Введи название нового предмета')
+    checkResponce(client, 'subjj', 'Предмет subjj уже существует')
 
-    client.send_message(chat_id, '/removesubject')
-    client.send_message(chat_id, 'subjj')
-
+    sendAndWaitAny(client, '/removesubject')
+    sendAndWaitAny(client, 'subjj')
 
 @pytest.mark.system
-def test_valid_member(client, chat_id):
-    client.send_message(chat_id, '/member')
-    time.sleep(DELAY)
-    for message in client.get_chat_history(chat_id, limit=1):
-        assert message.text == 'Для продолжения нажми кнопку ввод'
-    client.send_message(chat_id, 'Ввод')
-    time.sleep(DELAY)
-    client.send_message(chat_id, 'test-name')
-    time.sleep(DELAY)
-    for message in client.get_chat_history(chat_id, limit=1):
-        assert message.text == 'Отображаемое имя установлено'
+def test_valid_member(client):
+    checkResponce(client, '/member', 'Для продолжения нажми кнопку ввод')
+    sendAndWaitAny(client, 'Ввод')
+    checkResponce(client, 'test-name', 'Отображаемое имя установлено')
 
 
 @pytest.mark.system
