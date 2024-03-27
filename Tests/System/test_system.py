@@ -1,27 +1,36 @@
-import time
 import pytest
 
-from pyrogram import Client
-
-from dotenv import load_dotenv
+import time
 import os
 
+import telebot
+from pyrogram import Client
+from dotenv import load_dotenv
+
+
+load_dotenv()
+bot_id = int(os.getenv('bot_id'))
+chat_id = int(os.getenv('chat_id'))
 
 DELAY = 0.3
 
-def checkLastMessage(client, chat_id, text: str):
-    for message in client.get_chat_history(chat_id, limit=1):
-        assert message.text == text
 
-def checkResponce(client, chat_id, text: str, responceText: str, DELAY=DELAY):
+def checkResponce(client, chat_id, text: str, responceText: str, timeout = 1):
+    lastMessage = next(client.get_chat_history(chat_id, limit=1))
     client.send_message(chat_id, text)
-    time.sleep(DELAY)
-    checkLastMessage(client, chat_id, responceText)
+    startTime = time.time()
+    while True:
+        message : telebot.types.Message = next(client.get_chat_history(chat_id, limit=1))
+        if (message.from_user.id == bot_id) and (message != lastMessage):
+            break
+        if time.time() - startTime > timeout:
+            assert False
+            break
+    assert message.text == responceText
 
 
 @pytest.fixture(scope="session")
 def client():
-    
     load_dotenv()
     api_id = os.getenv('api_id')
     api_hash = os.getenv('api_hash')
@@ -34,26 +43,20 @@ def client():
 
     client.stop()
 
-@pytest.fixture(scope="session")
-def chat_id():
-    return int(os.getenv('chat_id'))
-
 
 @pytest.mark.system
-def test_subject_incorrectTitle(client, chat_id):
+def test_subject_incorrectTitle(client):
     checkResponce(client, chat_id, '/subject', 'Введи название нового предмета')
     checkResponce(client, chat_id, 'test-subj', 'Название предмета некорректно.\nИспользуйте не более 30 символов русского и английского алфавита.')
 
-
 @pytest.mark.system
-def test_subject(client, chat_id):
+def test_subject(client):
     checkResponce(client, chat_id, '/subject', 'Введи название нового предмета')
     checkResponce(client, chat_id, 'subjj', 'Предмет subjj добавлен')
     checkResponce(client, chat_id, '/subject', 'Введи название нового предмета')
     checkResponce(client, chat_id, 'subjj', 'Предмет subjj уже существует')
 
     client.send_message(chat_id, '/removesubject')
-    time.sleep(DELAY)
     client.send_message(chat_id, 'subjj')
 
 
