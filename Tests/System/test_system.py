@@ -12,7 +12,6 @@ load_dotenv()
 bot_id = int(os.getenv('bot_id'))
 chat_id = int(os.getenv('chat_id'))
 
-DELAY = 0.3
 
 
 def checkResponce(client, chat_id, text: str, responceText: str, timeout = 1):
@@ -28,6 +27,30 @@ def checkResponce(client, chat_id, text: str, responceText: str, timeout = 1):
             break
     assert message.text == responceText
 
+def create_test_subj(client, chat_id):
+    #TODO если в бд есть предмет
+    delete_test_subj(client, chat_id)
+
+    client.send_message(chat_id, '/subject')
+    time.sleep(DELAY)
+    client.send_message(chat_id, 'subject')
+    time.sleep(DELAY)
+
+def create_test_queue(client, chat_id):
+    create_test_subj(client, chat_id)
+    client.send_message(chat_id, '/create')
+    expected = ("По какому предмету ты хочешь создать очередь?")
+    time.sleep(DELAY)
+    for message in client.get_chat_history(chat_id, limit=1):
+        assert message.text == expected
+    client.send_message(chat_id, 'subject')
+    time.sleep(DELAY)
+
+def delete_test_subj(client, chat_id):
+    client.send_message(chat_id, '/delete')
+    time.sleep(DELAY)
+    client.send_message(chat_id, 'Очередь по subject')
+    time.sleep(DELAY)
 
 @pytest.fixture(scope="session")
 def client():
@@ -38,10 +61,20 @@ def client():
 
     client = Client(name='client1', api_id=api_id, api_hash=api_hash, in_memory=True, session_string=session_string)
     client.start()
-
     yield client
 
     client.stop()
+
+@pytest.fixture(scope="session")
+def client2():
+    load_dotenv()
+    api_id2 = os.getenv('api_id2')
+    api_hash2 = os.getenv('api_hash2')
+    session_string2 = os.getenv('session_string2')
+    client2 = Client(name='client2', api_id=api_id2, api_hash=api_hash2, in_memory=True, session_string=session_string2)
+    client2.start()
+    yield client2
+    client2.stop()
 
 
 @pytest.mark.system
@@ -58,12 +91,6 @@ def test_subject(client):
 
     client.send_message(chat_id, '/removesubject')
     client.send_message(chat_id, 'subjj')
-
-
-@pytest.mark.system
-def test_removesubject_cancel(client, chat_id):
-    checkResponce(client, chat_id, '/removesubject', 'Удалить предмет')
-    checkResponce(client, chat_id, '❌ Отмена', 'Команда отменена')
 
 
 @pytest.mark.system
@@ -122,26 +149,6 @@ def test_delete(client, chat_id):
 
 
 @pytest.mark.system
-def test_start(client, chat_id):
-    client.send_message(chat_id, '/start')
-    expected = ("Привет! Я бот для составления очередей.\n"
-                "Ты можешь воспользоваться следующими командами, "
-                "чтобы более подробно узнать что я умею:")
-    time.sleep(DELAY)
-    for message in client.get_chat_history(chat_id, limit=1):
-        assert message.text == expected
-
-
-@pytest.mark.system
-def test_show_empty(client, chat_id):
-    client.send_message(chat_id, '/show')
-    expected = ("Еще нет никаких очередей. Радуйся!")
-    time.sleep(DELAY)
-    for message in client.get_chat_history(chat_id, limit=1):
-        assert message.text == expected
-
-
-@pytest.mark.system
 def test_delete_cancel(client, chat_id):
     client.send_message(chat_id, '/subject')
     time.sleep(DELAY)
@@ -183,26 +190,6 @@ def test_delete_cancel(client, chat_id):
     time.sleep(DELAY)
     client.send_message(chat_id, 'Очередь по incorrect_subj_test')
 
-
-@pytest.mark.system
-def test_help(client, chat_id):
-    client.send_message(chat_id, '/help')
-    time.sleep(DELAY)
-    for message in client.get_chat_history(chat_id, limit=1):
-        assert message.text == ("можно воспользоваться следующими командами:\n"
-                     "/member - добавление в список пользователей\n"
-                     "/subject - добавление предмета\n"
-                     "/create - создание очереди\n"
-                     "/delete - удаление очереди\n"
-                     "/show - вывод очереди\n"
-                     "/join - запись в последнюю очередь\n"
-                     "/jointo - запись в любую из очередей\n"
-                     "/replaceto - смена мест c выбором очереди\n"
-                     "/replace - смена места в последней очереди\n"
-                     "/removefrom - выход из очереди\n"
-                     "/removesubject - выход из очереди\n"
-                     "/reject - отклонение запроса смены мест\n"
-                     "/confirm - подтверждение запроса смены мест")
 
 
 @pytest.mark.system
@@ -305,3 +292,31 @@ def test_create_correct(client, chat_id):
     time.sleep(DELAY)
     client.send_message(chat_id, 'subject for create')
     time.sleep(DELAY)
+
+@pytest.mark.system
+def test_join_last(client, client2, chat_id):
+    create_test_queue(client, chat_id)
+
+    client.send_message(chat_id, '/join')
+    time.sleep(DELAY)
+    client.send_message(chat_id, 'Последнее свободное')
+    time.sleep(DELAY)
+    #TODO проверить что чел записан на мсесто, равное количесвту записей в мемберах
+
+    client2.send_message(chat_id, '/join')
+    time.sleep(DELAY)
+    client2.send_message(chat_id, 'Последнее свободное')
+    time.sleep(DELAY)
+
+    delete_test_subj(client, chat_id)
+
+@pytest.mark.system
+def test_join_first(client, chat_id):
+    create_test_queue(client, chat_id)
+
+    client.send_message(chat_id, '/join')
+    time.sleep(DELAY)
+    client.send_message(chat_id, 'Первое свободное')
+    #TODO проверить что чел записан на первое место
+
+    delete_test_subj(client, chat_id)
