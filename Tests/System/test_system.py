@@ -7,6 +7,9 @@ import telebot
 from pyrogram import Client
 from dotenv import load_dotenv
 
+from Src.Entities.Member import Member
+from Src.Services.MemberService import MemberService
+from Tests.dbTest import DatabaseTest
 
 load_dotenv()
 bot_id = int(os.getenv('bot_id'))
@@ -24,8 +27,7 @@ def sendAndWaitAny(client, text: str):
     waitBotMessage(client)
 
 def checkResponce(client, text: str, responceText: str, timeout = 30):
-    lastMessage = next(client.get_chat_history(chat_id, limit=1))
-    client.send_message(chat_id, text)
+    lastMessage = client.send_message(chat_id, text)
     startTime = time.time()
     while True:
         message : telebot.types.Message = next(client.get_chat_history(chat_id, limit=1))
@@ -36,6 +38,7 @@ def checkResponce(client, text: str, responceText: str, timeout = 30):
             break
         time.sleep(0.3)
     assert message.text == responceText
+    return lastMessage.from_user.id
 
 def create_test_subj(client, chat_id):
     #TODO если в бд есть предмет
@@ -86,6 +89,9 @@ def client2():
     yield client2
     client2.stop()
 
+@pytest.fixture(scope='function')
+def databaseTest():
+    return DatabaseTest()
 
 @pytest.mark.system
 def test_subject_incorrectTitle(client):
@@ -103,11 +109,14 @@ def test_subject(client):
     sendAndWaitAny(client, 'subjj')
 
 @pytest.mark.system
-def test_valid_member(client):
-    checkResponce(client, '/member', 'Для продолжения нажми кнопку ввод')
+def test_valid_member(client, databaseTest):
+    clientId = checkResponce(client, '/member', 'Для продолжения нажми кнопку ввод')
     sendAndWaitAny(client, 'Ввод')
     checkResponce(client, 'test-name', 'Отображаемое имя установлено')
 
+    mem = MemberService.getMemberById(databaseTest, int(clientId)).name
+
+    assert mem.name == 'test-name'
 
 @pytest.mark.system
 def test_invalid_name(client, chat_id):
@@ -309,16 +318,78 @@ def test_join_last(client, client2, chat_id):
     time.sleep(DELAY)
     client2.send_message(chat_id, 'Последнее свободное')
     time.sleep(DELAY)
+    #TODO проверить что чел записан на мсесто, равное количесвту записей в мемберах -1
 
     delete_test_subj(client, chat_id)
 
 @pytest.mark.system
-def test_join_first(client, chat_id):
+def test_join_first(client, databaseTest):
     create_test_queue(client, chat_id)
 
     client.send_message(chat_id, '/join')
     time.sleep(DELAY)
-    client.send_message(chat_id, 'Первое свободное')
+    client1Id = client.send_message(chat_id, 'Первое свободное').from_user.id
+    time.sleep(DELAY)
+
+
     #TODO проверить что чел записан на первое место
+    with databaseTest.connection.cursor() as cur:
+        cur.execute("select * from subjects where id_subject=%s", (client1Id,))
+        #result = cur.fetchall()[0]
+
+
+    client2.send_message(chat_id, '/join')
+    time.sleep(DELAY)
+    client2.send_message(chat_id, 'Первое свободное')
+    time.sleep(DELAY)
+    #TODO проверить что чел записан на второе место
+
+    delete_test_subj(client, chat_id)
+
+
+@pytest.mark.system
+def test_join_num(client, chat_id):
+    create_test_queue(client, chat_id)
+
+    client.send_message(chat_id, '/join')
+    time.sleep(DELAY)
+    client.send_message(chat_id, 'Определенное')
+    time.sleep(DELAY)
+    client.send_message(chat_id, '2')
+    time.sleep(DELAY)
+    #TODO проверить что чел записан на второе место
+
+    client2.send_message(chat_id, '/join')
+    time.sleep(DELAY)
+    client2.send_message(chat_id, 'Определенное')
+    time.sleep(DELAY)
+    client2.send_message(chat_id, '2')
+    time.sleep(DELAY)
+    #TODO проверить что чел записан на 3 место
+
+    delete_test_subj(client, chat_id)
+
+@pytest.mark.system
+def test_confirm(client, chat_id):
+    create_test_queue(client, chat_id)
+
+    client.send_message(chat_id, '/join')
+    time.sleep(DELAY)
+    client.send_message(chat_id, 'Определенное')
+    time.sleep(DELAY)
+    client.send_message(chat_id, '1')
+    time.sleep(DELAY)
+    client2.send_message(chat_id, '/join')
+    time.sleep(DELAY)
+    client2.send_message(chat_id, 'Определенное')
+    time.sleep(DELAY)
+    client2.send_message(chat_id, '2')
+    time.sleep(DELAY)
+
+    client.send_message(chat_id, '/replace')
+    time.sleep(DELAY)
+    client.send_message(chat_id, '2')
+    time.sleep(DELAY)
+    # TODO проверить что произошла смена
 
     delete_test_subj(client, chat_id)
