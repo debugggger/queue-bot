@@ -130,17 +130,13 @@ def test_delete_cancel(client, databaseTest):
 @pytest.mark.system
 def test_show(client, databaseTest):
     create_test_queue(client)
-    sendAndWaitAny(client, '/show')
-    sendAndWaitAny(client, 'subjj')
 
-    for message in client.get_chat_history(chat_id, limit=1):
-        assert message.text == 'Очередь по subjj:'
+    checkResponce(client, '/show', 'По какому предмету ты хочешь просмотреть очередь?')
+    checkResponce(client, 'subjj', 'Очередь по subjj:')
 
     subjId = SubjectService.getSubjectByTitle(databaseTest, 'subjj').id
     queuqId = QueueService.getQueueBySubjectId(databaseTest, subjId).id
-    assert (QueueService.getCountMembersInQueue(databaseTest, queuqId), 0)
-
-    delete_test_subj(client)
+    assert QueueService.getCountMembersInQueue(databaseTest, queuqId) == 0
 
 # 10
 @pytest.mark.system
