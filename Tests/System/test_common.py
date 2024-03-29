@@ -4,6 +4,7 @@ import time
 import os
 
 import telebot
+from telebot import types
 from pyrogram import Client
 from dotenv import load_dotenv
 from dbTest import DatabaseTest
@@ -93,4 +94,9 @@ def create_test_queue(client):
 
 def clearDatabase(database):
     with database.connection.cursor() as cur:
-        cur.execute("truncate queuemembers, queuesubjects, subjects")
+        cur.execute("truncate queuemembers, queuesubjects, subjects, members")
+
+def createMember(client):
+    message: types.Message = sendAndWaitAny(client, '/member')
+    sendAndWaitAny(client, 'Ввод')
+    sendAndWaitAny(client, message.from_user.first_name)

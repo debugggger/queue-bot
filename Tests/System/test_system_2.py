@@ -11,6 +11,7 @@ from dotenv import load_dotenv
 from Services.MemberService import MemberService
 from Services.SubjectService import SubjectService
 from Services.QueueService import QueueService
+from Src.Entities import Queue
 
 from test_common import *
 from utils import formReplaceRequest
@@ -28,28 +29,38 @@ def test_create_correct(client):
     sendAndWaitAny(client, '/subject')
     sendAndWaitAny(client, 'subject for create')
 
+    subject = SubjectService.getSubjectByTitle('subject for create')
+
+    assert not QueueService.isQueueExist(subject.id)
+
     checkResponce(client, '/create', 'По какому предмету ты хочешь создать очередь?')
     checkResponce(client, 'subject for create', 'Создана очередь по subject for create')
 
-    sendAndWaitAny(client, '/delete')
-    sendAndWaitAny(client, 'Очередь по subject for create')
-    sendAndWaitAny(client, '/removesubject')
-    sendAndWaitAny(client, 'subject for create')
+    assert QueueService.isQueueExist(databaseTest, subject.id)
 
 # 14
 @pytest.mark.system
 def test_join_last(client, client2, databaseTest):
+    createMember(client)
+    createMember(client2)
     create_test_queue(client)
 
+    count = MemberService.getMembersCount(databaseTest)
+
     checkResponce(client, '/join', 'Выбрана очередь по subjj:\nВыбери место для записи')
-    expected = f'Ты записан на {MemberService.getMembersCount(databaseTest)} место'
-    checkResponce(client, 'Последнее свободное', expected)
+    expected = f'Ты записан на {count} место'
+    id1 = checkResponce(client, 'Последнее свободное', expected)
 
     checkResponce(client2, '/join', 'Выбрана очередь по subjj:\nВыбери место для записи')
-    expected = f'Ты записан на {MemberService.getMembersCount(databaseTest) - 1} место'
-    checkResponce(client2, 'Последнее свободное', expected)
+    expected = f'Ты записан на {count - 1} место'
+    id2 = checkResponce(client2, 'Последнее свободное', expected)
 
-    delete_test_subj(client)
+    # TODO не работает
+    queue: Queue = QueueService.getQueueBySubjectTitle(databaseTest, 'subjj')
+    assert 1 == queue.members[0].member.tgNum
+    assert len(list(filter(lambda m: m.member.tgNum == id1 and m.placeNumber == count, queue.members))) == 1
+    assert len(list(filter(lambda m: m.member.tgNum == id2 and m.placeNumber == count-1, queue.members))) == 1
+
 
 # 15
 @pytest.mark.system
