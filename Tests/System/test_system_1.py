@@ -52,6 +52,8 @@ def test_add_invalid_subject(client, databaseTest):
 # 4
 @pytest.mark.system
 def test_add_valid_subject(client, databaseTest):
+
+    assert not SubjectService.isSubjectExist(databaseTest, 'subjj')
     checkResponce(client, '/subject', 'Введи название нового предмета')
     checkResponce(client, 'subjj', 'Предмет subjj добавлен')
     # Проверяем, что предмет был добавлен
@@ -70,6 +72,7 @@ def test_add_valid_subject(client, databaseTest):
 @pytest.mark.system
 def test_remove_subject(client, databaseTest):
     create_test_subj(client)
+    assert SubjectService.isSubjectExist(databaseTest, 'subjj')
     checkResponce(client, '/removesubject', 'Удалить предмет')
     checkResponce(client, 'subjj', 'Предмет удален')
     # Проверяем, что предмет был удален
@@ -79,9 +82,14 @@ def test_remove_subject(client, databaseTest):
 # 6
 @pytest.mark.system
 def test_create_queue(client, databaseTest):
-    create_test_queue(client)
 
+    create_test_subj(client)
     subjId = SubjectService.getSubjectByTitle(databaseTest, 'subjj').id
+    assert not QueueService.isQueueExist(databaseTest, subjId)
+
+    checkResponce(client, '/create', 'По какому предмету ты хочешь создать очередь?')
+    sendAndWaitAny(client, 'subjj')
+
     assert QueueService.isQueueExist(databaseTest, subjId)
 
 # 7
@@ -132,6 +140,26 @@ def test_show(client, databaseTest):
     queuqId = QueueService.getQueueBySubjectId(databaseTest, subjId).id
     assert (QueueService.getCountMembersInQueue(databaseTest, queuqId), 0)
 
+    delete_test_subj(client)
+
+# 10
+@pytest.mark.system
+def test_auto_upd(client, databaseTest):
+    create_test_queue(client)
+    sendAndWaitAny(client, '/show')
+    sendAndWaitAny(client, 'subjj')
+    for message in client.get_chat_history(chat_id, limit=1):
+        assert message.text == 'Очередь по subjj:'
+
+    create_user(client)
+
+    checkResponce(client, '/join', 'Выбрана очередь по subjj:\nВыбери место для записи')
+    checkResponce(client, 'Первое свободное', 'Ты записан на 1 место')
+
+    for message in client.get_chat_history(chat_id, limit=10):
+        if 'Очередь по subjj:' in message.text:
+            assert message.text != 'Очередь по subjj:\n1 - test-name'
+    delete_test_subj(client)
 
 # 10
 # @pytest.mark.system
