@@ -26,7 +26,22 @@ jobs:
         ports:
           - 5432:5432
         options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
-
+    
+    env:
+      TOKEN: ${{ secrets.TOKEN }}
+      chat_id: ${{ secrets.CHAT_ID }}
+      host: "127.0.0.1"
+      user: "queue_db_admin"
+      password: "raBOTyaga"
+      db_name: "queue_db"
+      port: 5432
+      api_id: ${{ secrets.API_ID }}
+      api_hash: ${{ secrets.API_HASH }}
+      session_string: ${{ secrets.API_SESSION }}
+      api_id2: ${{ secrets.API_ID2 }}
+      api_hash2: ${{ secrets.API_HASH2 }}
+      session_string2: ${{ secrets.API_SESSION2 }}
+      bot_id: ${{ secrets.BOT_ID }}
 
     steps:
     - uses: actions/checkout@v3
@@ -40,6 +55,8 @@ jobs:
         pip install flake8 pytest
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
     - name: Set up PostgreSQL DB
+      env:
+        PGPASSWORD: postgres
       run: |
         psql -U postgres -h localhost -p ${{ job.services.postgres.ports['5432'] }} -c 'CREATE DATABASE queue_db
                                                                                             WITH
@@ -49,25 +66,15 @@ jobs:
                                                                                             CONNECTION LIMIT = -1
                                                                                             IS_TEMPLATE = False;'
         psql -U postgres -h localhost -p ${{ job.services.postgres.ports['5432'] }} -d queue_db -a -f DatabaseDumps/create_db_structure.sql
-      env:
-        PGPASSWORD: postgres
     - name: Run tg-bot
-      env:
-        TOKEN: ${{ secrets.TOKEN }}
-        chat_id: ${{ secrets.CHAT_ID }}
-        host: "127.0.0.1"
-        user: "queue_db_admin"
-        password: "raBOTyaga"
-        db_name: "queue_db"
-        port: 5432
-        api_id: ${{ secrets.API_ID }}
-        api_hash: ${{ secrets.API_HASH }}
-        session_string: ${{ secrets.API_SESSION }}
-        api_id2: ${{ secrets.API_ID2 }}
-        api_hash2: ${{ secrets.API_HASH2 }}
-        session_string2: ${{ secrets.API_SESSION2 }}
-        bot_id: ${{ secrets.BOT_ID }}
       run: |
         python Src/queueBot.py &
+    - name: Run Unit tests
+      run: |
+        pytest -m unit
+    - name: Run Integration tests
+      run: |
         pytest -m integration
+    - name: Run System tests
+      run: |
         pytest -m system
