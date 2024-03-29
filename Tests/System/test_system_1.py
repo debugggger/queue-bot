@@ -138,7 +138,7 @@ def test_show(client, databaseTest):
     assert QueueService.getCountMembersInQueue(databaseTest, queuqId) == 0
 
 # 10
-@pytest.mark.systemR
+@pytest.mark.system
 def test_confirm_empty(client):
     checkResponce(client, '/confirm', 'Для использования этой команды тебе нужно записаться в списочек member-ов')
 
@@ -147,7 +147,7 @@ def test_confirm_empty(client):
 
 
 # 11
-@pytest.mark.systemR
+@pytest.mark.system
 def test_reject_empty(client):
     createMember(client)
     checkResponce(client, '/reject', 'Ты еще не записан ни в одну очередь. Ух, ты!')
