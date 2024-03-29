@@ -25,6 +25,7 @@ def test_create_cancel(client, databaseTest):
     checkResponce(client, '/create', 'По какому предмету ты хочешь создать очередь?')
     checkResponce(client, '❌ Отмена', 'Команда отменена')
 
+
     afterQueuesCount = len(QueueService.getQueues(databaseTest))
 
     assert beforeQueuesCount == afterQueuesCount
@@ -136,7 +137,7 @@ def test_confirm(client, client2, databaseTest):
     assert len(list(filter(lambda m: int(m.member.tgNum) == msg2.from_user.id and m.placeNumber == 1, queue.members))) == 1
 
 # 18
-@pytest.mark.systemR
+@pytest.mark.system
 def test_auto_upd(client, databaseTest):
     create_test_queue(client)
     checkResponce(client, '/show', 'По какому предмету ты хочешь просмотреть очередь?')
@@ -150,3 +151,34 @@ def test_auto_upd(client, databaseTest):
     for message in client.get_chat_history(chat_id, limit=10):
         if 'Очередь по subjj:' in message.text:
             assert message.text != 'Очередь по subjj:\n1 - test-name'
+
+
+# 18
+@pytest.mark.system
+def test_notification(client, client2, databaseTest):
+    create_test_queue(client)
+    create_user(client)
+    create_user(client2)
+    checkResponce(client, '/join', 'Выбрана очередь по subjj:\nВыбери место для записи')
+    sendAndWaitAny(client, 'Первое свободное')
+    checkResponce(client2, '/join', 'Выбрана очередь по subjj:\nВыбери место для записи')
+    mes = sendAndWaitAny(client2, 'Первое свободное')
+    checkResponce(client, '/removefrom', 'Из какой очереди ты хочешь выйти')
+    checkResponce(client, 'Очередь по subjj', 'Ты вышел из этой очереди')
+    time.sleep(1)
+    for message in client.get_chat_history(chat_id, limit=1):
+        assert message.text == '@' + mes.from_user.username + ' твоя очередь сдавать'
+
+#19
+@pytest.mark.system
+def test_remove(client, databaseTest):
+    create_test_queue(client)
+    create_user(client)
+    checkResponce(client, '/join', 'Выбрана очередь по subjj:\nВыбери место для записи')
+    mes = sendAndWaitAny(client, 'Первое свободное')
+    queue = QueueService.getQueueBySubjectTitle(databaseTest, 'subjj')
+    member = MemberService.getMemberByTgNum(databaseTest, mes.from_user.id)
+    assert QueueService.isMemberInQueue(databaseTest, queue.id, member.id)
+    checkResponce(client, '/removefrom', 'Из какой очереди ты хочешь выйти')
+    checkResponce(client, 'Очередь по subjj', 'Ты вышел из этой очереди')
+    assert not QueueService.isMemberInQueue(databaseTest, queue.id, member.id)
