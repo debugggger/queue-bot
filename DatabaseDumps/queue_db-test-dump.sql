@@ -16,6 +16,16 @@
 --    CONNECTION LIMIT = -1
 --    IS_TEMPLATE = False;
 
+CREATE ROLE queue_db_admin WITH
+  LOGIN
+  NOSUPERUSER
+  INHERIT
+  CREATEDB
+  NOCREATEROLE
+  NOREPLICATION
+  ENCRYPTED PASSWORD 'SCRAM-SHA-256$4096:0g5+Hrr/X0fTf0QT1/u3LA==$BG3fu+N3EVn82BStFSLqlRxOX/BJjaSYuEpNTtxIS+Q=:e/E6dtlZ4JoIP/TYpiwXPe4l3tbfLQnraXUBDZ96gTk=';
+
+GRANT pg_monitor TO queue_db_admin;
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
