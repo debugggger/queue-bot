@@ -63,6 +63,9 @@ jobs:
         api_id: ${{ secrets.API_ID }}
         api_hash: ${{ secrets.API_HASH }}
         session_string: ${{ secrets.API_SESSION }}
+        api_id2: ${{ secrets.API_ID2 }}
+        api_hash2: ${{ secrets.API_HASH2 }}
+        session_string2: ${{ secrets.API_SESSION2 }}
         bot_id: ${{ secrets.BOT_ID }}
       run: |
         python Src/queueBot.py &
