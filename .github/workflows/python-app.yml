@@ -5,7 +5,7 @@ name: Python application
 
 on:
   push:
-    branches: [ "main", "dev" ]
+    branches: [ "main", "dev", "test/system" ]
   pull_request:
     branches: [ "main", "dev" ]
 
@@ -16,6 +16,17 @@ jobs:
   build:
 
     runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:latest
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+
 
     steps:
     - uses: actions/checkout@v3
@@ -28,14 +39,32 @@ jobs:
         python -m pip install --upgrade pip
         pip install flake8 pytest
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-    - name: Run integration tests
+    - name: Set up PostgreSQL DB
       run: |
-        pytest -m integration
-    - name: Run system tests
+        psql -U postgres -h localhost -p ${{ job.services.postgres.ports['5432'] }} -c 'CREATE DATABASE queue_db
+                                                                                            WITH
+                                                                                            OWNER = postgres
+                                                                                            ENCODING = 'UTF8'
+                                                                                            TABLESPACE = pg_default
+                                                                                            CONNECTION LIMIT = -1
+                                                                                            IS_TEMPLATE = False;'
+        psql -U postgres -h localhost -p ${{ job.services.postgres.ports['5432'] }} -d queue_db -a -f DatabaseDumps/create_db_structure.sql
       env:
+        PGPASSWORD: postgres
+    - name: Run tg-bot
+      env:
+        TOKEN: ${{ secrets.TOKEN }}
+        chat_id: ${{ secrets.CHAT_ID }}
+        host: "127.0.0.1"
+        user: "queue_db_admin"
+        password: "raBOTyaga"
+        db_name: "queue_db"
+        port: 5432
         api_id: ${{ secrets.API_ID }}
         api_hash: ${{ secrets.API_HASH }}
         session_string: ${{ secrets.API_SESSION }}
-        chat_id: ${{ secrets.CHAT_ID }}
+        bot_id: ${{ secrets.BOT_ID }}
       run: |
+        python Src/queueBot.py &
+        pytest -m integration
         pytest -m system

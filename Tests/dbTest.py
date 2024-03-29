@@ -13,11 +13,11 @@ class DatabaseTest:
     def __init__(self):
         load_dotenv()
         self.connection = psycopg2.connect(
-            host=os.getenv('hostTest'),
-            user=os.getenv('userTest'),
-            password=os.getenv('passwordTest'),
-            database=os.getenv('db_nameTest'),
-            port=os.getenv('portTest')
+            host="127.0.0.1",
+            user="queue_db_admin",
+            password="raBOTyaga",
+            database="queue_db",
+            port=5432
         )
         # self.connection.autocommit = True
         with self.connection.cursor() as cur:
