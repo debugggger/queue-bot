@@ -169,15 +169,15 @@ def test_remove_subject(client, databaseTest):
 # 6
 @pytest.mark.system
 def test_create_queue(client, databaseTest):
+    checkResponce(client, '/removesubject', 'Удалить предмет')
+    checkResponce(client, 'subjj', 'Предмет удален')
     checkResponce(client, '/subject', 'Введи название нового предмета')
     checkResponce(client, 'subjj', 'Предмет subjj добавлен')
     checkResponce(client, '/create', 'По какому предмету ты хочешь создать очередь?')
-    sendAndWaitAny(client, 'subjj')
     checkResponce(client, 'subjj', 'Создана очередь по subjj')
     assert QueueService.isQueueExist(databaseTest,
-                                     SubjectService.getSubjectByTitle(databaseTest, 'subjj').id_subject)
-    checkResponce(client, '/delete', 'По какому предмету ты хочешь создать очередь?')
-    sendAndWaitAny(client, 'subjj')
+                                     SubjectService.getSubjectByTitle(databaseTest, 'subjj').id)
+    checkResponce(client, '/delete', 'По какому предмету ты хочешь удалить очередь?')
     checkResponce(client, 'Очередь по subjj', 'Очередь удалена')
     checkResponce(client, '/removesubject', 'Удалить предмет')
     checkResponce(client, 'subjj', 'Предмет удален')
