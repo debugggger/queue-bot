@@ -136,7 +136,7 @@ def test_confirm(client, client2, databaseTest):
     assert len(list(filter(lambda m: int(m.member.tgNum) == msg2.from_user.id and m.placeNumber == 1, queue.members))) == 1
 
 # 18
-@pytest.mark.systemR
+@pytest.mark.system
 def test_auto_upd(client, databaseTest):
     create_test_queue(client)
     checkResponce(client, '/show', 'По какому предмету ты хочешь просмотреть очередь?')
