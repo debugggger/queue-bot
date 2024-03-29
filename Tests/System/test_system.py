@@ -104,7 +104,7 @@ def databaseTest():
 
 # 1
 @pytest.mark.system
-def test_add_invalid_member(client, chat_id):
+def test_add_invalid_member(client, databaseTest):
     clientId = checkResponce(client, '/member', 'Для продолжения нажми кнопку ввод')
     sendAndWaitAny(client, 'Ввод')
     checkResponce(client, 'invalid*((&', 'Отображаемое имя некорректно.\n'
@@ -130,7 +130,7 @@ def test_add_valid_member(client, databaseTest):
 
 # 3
 @pytest.mark.system
-def test_add_invalid_subject(client):
+def test_add_invalid_subject(client, databaseTest):
     checkResponce(client, '/subject', 'Введи название нового предмета')
     checkResponce(client, 'thisisverylongtitleforsubjectmore30letters', 'Название предмета некорректно.\nИспользуйте не более 30 символов русского и английского алфавита.')
     # Проверяем, что предмет НЕ был добавлен
@@ -156,11 +156,11 @@ def test_add_valid_subject(client, databaseTest):
 
 # 5
 @pytest.mark.system
-def test_remove_subject(client, chat_id):
+def test_remove_subject(client, databaseTest):
     checkResponce(client, '/subject', 'Введи название нового предмета')
     checkResponce(client, 'subjj', 'Предмет subjj добавлен')
-    checkResponce(client, chat_id, '/removesubject', 'Удалить предмет')
-    checkResponce(client, chat_id, 'subjj', 'Предмет удален')
+    checkResponce(client, '/removesubject', 'Удалить предмет')
+    checkResponce(client, 'subjj', 'Предмет удален')
     # Проверяем, что предмет был удален
     assert not SubjectService.isSubjectExist(databaseTest, 'subjj')
 
