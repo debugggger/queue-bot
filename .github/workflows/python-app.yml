@@ -42,6 +42,7 @@ jobs:
       api_hash2: ${{ secrets.API_HASH2 }}
       session_string2: ${{ secrets.API_SESSION2 }}
       bot_id: ${{ secrets.BOT_ID }}
+      PGPASSWORD: postgres
 
     steps:
     - uses: actions/checkout@v3
@@ -55,8 +56,6 @@ jobs:
         pip install flake8 pytest
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
     - name: Set up PostgreSQL DB
-      env:
-        PGPASSWORD: postgres
       run: |
         psql -U postgres -h localhost -p ${{ job.services.postgres.ports['5432'] }} -c 'CREATE DATABASE queue_db
                                                                                             WITH
@@ -65,9 +64,6 @@ jobs:
                                                                                             TABLESPACE = pg_default
                                                                                             CONNECTION LIMIT = -1
                                                                                             IS_TEMPLATE = False;'
-    - name: Run tg-bot
-      run: |
-        python Src/queueBot.py &
     - name: Run Unit tests
       run: |
         psql -U postgres -h localhost -p ${{ job.services.postgres.ports['5432'] }} -c "truncate queuemembers, queuesubjects, subjects, members"
@@ -76,6 +72,9 @@ jobs:
     - name: Run Integration tests
       run: |
         pytest -m integration
+    - name: Run tg-bot
+      run: |
+        python Src/queueBot.py &
     - name: Run System tests
       run: |
         psql -U postgres -h localhost -p ${{ job.services.postgres.ports['5432'] }} -c "truncate queuemembers, queuesubjects, subjects, members"
