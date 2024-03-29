@@ -84,7 +84,7 @@ def test_join_first(client, client2, databaseTest):
     assert len(list(filter(lambda m: int(m.member.tgNum) == id2 and m.placeNumber == 2, queue.members))) == 1
 
 # 16
-@pytest.mark.systemR
+@pytest.mark.system
 def test_join_num(client, client2, databaseTest):
     createMember(client)
     createMember(client2)
