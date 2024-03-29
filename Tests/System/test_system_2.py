@@ -11,7 +11,7 @@ from dotenv import load_dotenv
 from Services.MemberService import MemberService
 from Services.SubjectService import SubjectService
 from Services.QueueService import QueueService
-from Src.Entities import Queue
+from Entities import Queue
 
 from test_common import *
 from utils import formReplaceRequest
