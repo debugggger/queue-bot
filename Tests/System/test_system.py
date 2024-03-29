@@ -71,11 +71,9 @@ def client():
     api_id = os.getenv('api_id')
     api_hash = os.getenv('api_hash')
     session_string = os.getenv('session_string')
-
     client = Client(name='client1', api_id=api_id, api_hash=api_hash, in_memory=True, session_string=session_string)
     client.start()
     yield client
-
     client.stop()
 
 @pytest.fixture(scope="session")
@@ -113,10 +111,7 @@ def test_valid_member(client, databaseTest):
     clientId = checkResponce(client, '/member', 'Для продолжения нажми кнопку ввод')
     sendAndWaitAny(client, 'Ввод')
     checkResponce(client, 'test-name', 'Отображаемое имя установлено')
-
-    mem = MemberService.getMemberById(databaseTest, int(clientId)).name
-
-    assert mem.name == 'test-name'
+    assert MemberService.getMemberByTgNum(databaseTest, int(clientId)).name == 'test-name'
 
 @pytest.mark.system
 def test_invalid_name(client, chat_id):
