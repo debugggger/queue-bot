@@ -23,11 +23,11 @@ def removeBlank(string: str) -> str:
 
 
 def checkSubjectTitle(title: str) -> bool:
-    return bool(re.fullmatch('([A-Za-zА-Яа-яёЁ]+ ?)+', title)) and (len(title) <= 30)
+    return (len(title) <= 30) and bool(re.fullmatch('([A-Za-zА-Яа-яёЁ]+ ?)+', title))
 
 
 def checkMemberName(name: str) -> bool:
-    return bool(re.fullmatch('([A-Za-zА-Яа-яёЁ]+[ \'-]?)+', name)) and (len(name) <= 30)
+    return (len(name) <= 30) and bool(re.fullmatch('([A-Za-zА-Яа-яёЁ]+[ \'-]?)+', name))
 
 
 def checkMessage(message: telebot.types.Message, chatId=None, timeout=5) -> bool:
