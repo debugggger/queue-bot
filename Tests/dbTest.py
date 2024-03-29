@@ -19,7 +19,7 @@ class DatabaseTest:
             database="queue_db",
             port=5432
         )
-        # self.connection.autocommit = True
+        self.connection.autocommit = True
         with self.connection.cursor() as cur:
             cur.execute("select version();")
             print(f"server vers:  {cur.fetchone()}")

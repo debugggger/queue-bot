@@ -12,15 +12,22 @@ load_dotenv()
 bot_id = int(os.getenv('bot_id'))
 chat_id = int(os.getenv('chat_id'))
 
-DELAY = 0.5
+DELAY = 0.8
 
-def waitBotMessage(client):
-    while next(client.get_chat_history(chat_id, limit=1)).from_user.id != bot_id:
-        time.sleep(0.3)
+def waitBotMessage(client, timeout = 30):
+    startTime = time.time()
+    while True:
+        if next(client.get_chat_history(chat_id, limit=1)).from_user.id == bot_id:
+            break
+        if time.time() - startTime > timeout:
+            assert False
+            break
+        time.sleep(DELAY)
 
 def sendAndWaitAny(client, text: str):
-    client.send_message(chat_id, text)
+    message = client.send_message(chat_id, text)
     waitBotMessage(client)
+    return message
 
 def checkResponce(client, text: str, responceText: str, timeout = 30):
     lastMessage = client.send_message(chat_id, text)
@@ -32,9 +39,10 @@ def checkResponce(client, text: str, responceText: str, timeout = 30):
         if time.time() - startTime > timeout:
             assert False
             break
-        time.sleep(0.3)
+        time.sleep(DELAY)
     assert message.text == responceText
     return lastMessage.from_user.id
+
 
 @pytest.fixture(scope="session")
 def client():
@@ -47,7 +55,6 @@ def client():
     yield client
     client.stop()
 
-
 @pytest.fixture(scope="session")
 def client2():
     load_dotenv()
@@ -59,34 +66,31 @@ def client2():
     yield client2
     client2.stop()
 
-
-@pytest.fixture(scope='function')
+@pytest.fixture(scope='session')
 def databaseTest():
     return DatabaseTest()
 
+@pytest.fixture(autouse=True)
+def beforeTest(databaseTest):
+    clearDatabase(databaseTest)
+
+    yield
+
 def create_test_subj(client, chat_id):
-    #TODO если в бд есть предмет
-    delete_test_subj(client, chat_id)
-
-    client.send_message(chat_id, '/subject')
-    time.sleep(DELAY)
-    client.send_message(chat_id, 'subject')
-    time.sleep(DELAY)
-
+    sendAndWaitAny(client, '/subject')
+    sendAndWaitAny(client, 'subject')
 
 def create_test_queue(client, chat_id):
     create_test_subj(client, chat_id)
-    client.send_message(chat_id, '/create')
-    expected = ("По какому предмету ты хочешь создать очередь?")
-    time.sleep(DELAY)
-    for message in client.get_chat_history(chat_id, limit=1):
-        assert message.text == expected
-    client.send_message(chat_id, 'subject')
-    time.sleep(DELAY)
 
+    checkResponce(client, '/create', 'По какому предмету ты хочешь создать очередь?')
+    sendAndWaitAny(client, 'subject')
 
 def delete_test_subj(client, chat_id):
-    client.send_message(chat_id, '/delete')
-    time.sleep(DELAY)
-    client.send_message(chat_id, 'Очередь по subject')
-    time.sleep(DELAY)
+    sendAndWaitAny(client, '/delete')
+    sendAndWaitAny(client, 'Очередь по subject')
+
+def clearDatabase(database):
+    with database.connection.cursor() as cur:
+        cur.execute("truncate queuemembers, queuesubjects, subjects")
+        

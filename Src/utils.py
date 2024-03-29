@@ -2,10 +2,13 @@ import re
 import time
 
 import telebot
+from telebot import types
+
 
 from Entities.Queue import Queue
 from Requests.RuntimeInfoManager import RuntimeInfoManager
 from Services.QueueService import QueueService
+from Entities import Member
 
 
 def checkNumPlace(message):
@@ -53,3 +56,11 @@ def formQueueText(queue: Queue):
 
     return "Очередь по " + queue.subject.title + ":\n" + resStr
 
+def formReplaceRequest(replaceUsername: str, currentUsername: str, subjectTitle: str,
+                       placeNumber: int, oldPlace: int) -> str:
+    str1 = '@' + replaceUsername + ' вам предлагают поменяться в очереди\n'
+    str2 = ' от кого: ' + ' @' + currentUsername + '\n'
+    str3 = ' очередь: ' + subjectTitle + '\n'
+    str4 = ' ваше место: ' + str(placeNumber) + '\n'
+    str5 = ' предлагаемое место: ' + str(oldPlace)
+    return str1 + str2 + str3 + str4 + str5
