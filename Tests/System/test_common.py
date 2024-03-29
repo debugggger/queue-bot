@@ -76,6 +76,11 @@ def beforeTest(databaseTest):
 
     yield
 
+def create_user(client):
+    checkResponce(client, '/member', 'Для продолжения нажми кнопку ввод')
+    sendAndWaitAny(client, 'Ввод')
+    checkResponce(client, 'test-name', 'Отображаемое имя установлено')
+
 def create_test_subj(client):
     sendAndWaitAny(client, '/subject')
     sendAndWaitAny(client, 'subjj')
