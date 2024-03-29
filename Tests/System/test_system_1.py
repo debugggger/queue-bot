@@ -40,13 +40,13 @@ def test_add_valid_member(client, databaseTest):
     assert MemberService.getMemberByTgNum(databaseTest, int(clientId)).name == 'another-name'
 
 
-# 3 (почему-то не работает)
+# 3
 @pytest.mark.system
 def test_add_invalid_subject(client, databaseTest):
     checkResponce(client, '/subject', 'Введи название нового предмета')
     checkResponce(client, 'thisisverylongtitleforsubjectmore30letters', 'Название предмета некорректно.\nИспользуйте не более 30 символов русского и английского алфавита.')
     # Проверяем, что предмет НЕ был добавлен
-    assert not SubjectService.getSubjectByTitle(databaseTest, 'thisisverylongtitleforsubjectmore30letters').title == 'thisisverylongtitleforsubjectmore30letters'
+    assert not SubjectService.isSubjectExist(databaseTest, 'thisisverylongtitleforsubjectmore30letters')
 
 
 # 4
