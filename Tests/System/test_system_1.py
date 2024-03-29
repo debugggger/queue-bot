@@ -84,53 +84,39 @@ def test_create_queue(client, databaseTest):
     subjId = SubjectService.getSubjectByTitle(databaseTest, 'subjj').id
     assert QueueService.isQueueExist(databaseTest, subjId)
 
-    delete_test_subj(client)
-
-
 # 7
 @pytest.mark.system
 def test_delete(client, databaseTest):
     create_test_queue(client)
-    sendAndWaitAny(client, '/delete')
-    for message in client.get_chat_history(chat_id, limit=1):
-        assert message.text == 'По какому предмету ты хочешь удалить очередь?'
 
-    sendAndWaitAny(client, 'Очередь по subjj')
-    for message in client.get_chat_history(chat_id, limit=1):
-        assert message.text == 'Очередь удалена'
+    checkResponce(client, '/delete', 'По какому предмету ты хочешь удалить очередь?')
+
+    subjId = SubjectService.getSubjectByTitle(databaseTest, 'subjj').id
+    assert QueueService.isQueueExist(databaseTest, subjId)
+
+    checkResponce(client, 'Очередь по subjj', 'Очередь удалена')
 
     subjId = SubjectService.getSubjectByTitle(databaseTest, 'subjj').id
     assert not QueueService.isQueueExist(databaseTest, subjId)
-
-    delete_test_subj(client)
 
 #8
 @pytest.mark.system
 def test_delete_cancel(client, databaseTest):
     create_test_queue(client)
-    sendAndWaitAny(client, '/delete')
-    for message in client.get_chat_history(chat_id, limit=1):
-        assert message.text == 'По какому предмету ты хочешь удалить очередь?'
-    sendAndWaitAny(client, '❌ Отмена')
-
-    for message in client.get_chat_history(chat_id, limit=1):
-        assert message.text == 'Команда отменена'
-    subjId = SubjectService.getSubjectByTitle(databaseTest, 'subjj').id
-    assert QueueService.isQueueExist(databaseTest, subjId)
-
-    sendAndWaitAny(client, '/delete')
-    for message in client.get_chat_history(chat_id, limit=1):
-        assert message.text == 'По какому предмету ты хочешь удалить очередь?'
-    sendAndWaitAny(client, 'incorrect_sub:?')
-
-    for message in client.get_chat_history(chat_id, limit=1):
-        assert message.text == 'Команда отменена'
 
     subjId = SubjectService.getSubjectByTitle(databaseTest, 'subjj').id
+
+    checkResponce(client, '/delete', 'По какому предмету ты хочешь удалить очередь?')
+    
+    assert QueueService.isQueueExist(databaseTest, subjId)
+    checkResponce(client, '❌ Отмена', 'Команда отменена')
     assert QueueService.isQueueExist(databaseTest, subjId)
 
-    delete_test_subj(client)
+    checkResponce(client, '/delete', 'По какому предмету ты хочешь удалить очередь?')
 
+    assert QueueService.isQueueExist(databaseTest, subjId)
+    checkResponce(client, 'incorrect_sub:?', 'Команда отменена')
+    assert QueueService.isQueueExist(databaseTest, subjId)
 
 # 9
 @pytest.mark.system
@@ -145,8 +131,6 @@ def test_show(client, databaseTest):
     subjId = SubjectService.getSubjectByTitle(databaseTest, 'subjj').id
     queuqId = QueueService.getQueueBySubjectId(databaseTest, subjId).id
     assert (QueueService.getCountMembersInQueue(databaseTest, queuqId), 0)
-
-    delete_test_subj(client)
 
 
 # 10
