@@ -66,7 +66,6 @@ jobs:
                                                                                             IS_TEMPLATE = False;'
     - name: Run Unit tests
       run: |
-        psql -U postgres -h localhost -p ${{ job.services.postgres.ports['5432'] }} -c "truncate queuemembers, queuesubjects, subjects, members"
         psql -U postgres -h localhost -p ${{ job.services.postgres.ports['5432'] }} -d queue_db -a -f DatabaseDumps/queue_db-test-dump.sql
         pytest -m unit
     - name: Run Integration tests
