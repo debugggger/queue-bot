@@ -41,7 +41,7 @@ def test_add_valid_member(client, databaseTest):
 
 
 # 3 (почему-то не работает)
-# @pytest.mark.system
+@pytest.mark.system
 def test_add_invalid_subject(client, databaseTest):
     checkResponce(client, '/subject', 'Введи название нового предмета')
     checkResponce(client, 'thisisverylongtitleforsubjectmore30letters', 'Название предмета некорректно.\nИспользуйте не более 30 символов русского и английского алфавита.')
@@ -69,8 +69,7 @@ def test_add_valid_subject(client, databaseTest):
 # 5
 @pytest.mark.system
 def test_remove_subject(client, databaseTest):
-    checkResponce(client, '/subject', 'Введи название нового предмета')
-    checkResponce(client, 'subjj', 'Предмет subjj добавлен')
+    create_test_subj(client)
     checkResponce(client, '/removesubject', 'Удалить предмет')
     checkResponce(client, 'subjj', 'Предмет удален')
     # Проверяем, что предмет был удален
@@ -80,121 +79,74 @@ def test_remove_subject(client, databaseTest):
 # 6
 @pytest.mark.system
 def test_create_queue(client, databaseTest):
-    checkResponce(client, '/subject', 'Введи название нового предмета')
-    checkResponce(client, 'subjj', 'Предмет subjj добавлен')
-    checkResponce(client, '/create', 'По какому предмету ты хочешь создать очередь?')
-    checkResponce(client, 'subjj', 'Создана очередь по subjj')
-    assert QueueService.isQueueExist(databaseTest,
-                                     SubjectService.getSubjectByTitle(databaseTest, 'subjj').id)
-    checkResponce(client, '/delete', 'По какому предмету ты хочешь удалить очередь?')
-    checkResponce(client, 'Очередь по subjj', 'Очередь удалена')
-    checkResponce(client, '/removesubject', 'Удалить предмет')
-    checkResponce(client, 'subjj', 'Предмет удален')
+    create_test_queue(client)
+
+    subjId = SubjectService.getSubjectByTitle(databaseTest, 'subjj').id
+    assert QueueService.isQueueExist(databaseTest, subjId)
+
+    delete_test_subj(client)
 
 
 # 7
-# @pytest.mark.system
-# def test_delete(client, chat_id):
-#     client.send_message(chat_id, '/subject')
-#     time.sleep(DELAY)
-#     client.send_message(chat_id, 'subjj')
-#     time.sleep(DELAY)
-#     client.send_message(chat_id, '/create')
-#     time.sleep(DELAY)
-#     client.send_message(chat_id, 'subjj')
-#     time.sleep(DELAY)
-#     client.send_message(chat_id, '/delete')
-#     time.sleep(DELAY)
-#     for message in client.get_chat_history(chat_id, limit=1):
-#         assert message.text == 'По какому предмету ты хочешь удалить очередь?'
-#     time.sleep(DELAY)
-#     client.send_message(chat_id, 'Очередь по subjj')
-#     time.sleep(DELAY)
-#     for message in client.get_chat_history(chat_id, limit=1):
-#         assert message.text == 'Очередь удалена'
-#
-#     client.send_message(chat_id, '/removesubject')
-#     time.sleep(DELAY)
-#     client.send_message(chat_id, 'Очередь по subjj')
+@pytest.mark.system
+def test_delete(client, databaseTest):
+    create_test_queue(client)
+    sendAndWaitAny(client, '/delete')
+    for message in client.get_chat_history(chat_id, limit=1):
+        assert message.text == 'По какому предмету ты хочешь удалить очередь?'
 
+    sendAndWaitAny(client, 'Очередь по subjj')
+    for message in client.get_chat_history(chat_id, limit=1):
+        assert message.text == 'Очередь удалена'
 
-# 8
-# @pytest.mark.system
-# def test_delete_cancel(client, chat_id):
-#     client.send_message(chat_id, '/subject')
-#     time.sleep(DELAY)
-#     client.send_message(chat_id, 'subjj')
-#     time.sleep(DELAY)
-#     client.send_message(chat_id, '/create')
-#     time.sleep(DELAY)
-#     client.send_message(chat_id, 'subjj')
-#     time.sleep(DELAY)
-#     client.send_message(chat_id, '/delete')
-#     time.sleep(DELAY)
-#     for message in client.get_chat_history(chat_id, limit=1):
-#         assert message.text == 'По какому предмету ты хочешь удалить очередь?'
-#     time.sleep(DELAY)
-#     client.send_message(chat_id, '❌ Отмена')
-#     time.sleep(DELAY)
-#     for message in client.get_chat_history(chat_id, limit=1):
-#         assert message.text == 'Команда отменена'
-#
-#     client.send_message(chat_id, '/removesubject')
-#     time.sleep(DELAY)
-#     client.send_message(chat_id, '/incorrect_subj_test')
-#     time.sleep(DELAY)
-#     client.send_message(chat_id, '/delete')
-#     time.sleep(DELAY)
-#     for message in client.get_chat_history(chat_id, limit=1):
-#         assert message.text == 'По какому предмету ты хочешь удалить очередь?'
-#     time.sleep(DELAY)
-#     client.send_message(chat_id, 'incorrect_subj_test')
-#     time.sleep(DELAY)
-#     for message in client.get_chat_history(chat_id, limit=1):
-#         assert message.text == 'Команда отменена'
-#
-#     client.send_message(chat_id, '/removesubject')
-#     time.sleep(DELAY)
-#     client.send_message(chat_id, 'Очередь по subjj')
-#     time.sleep(DELAY)
-#     client.send_message(chat_id, '/removesubject')
-#     time.sleep(DELAY)
-#     client.send_message(chat_id, 'Очередь по incorrect_subj_test')
+    subjId = SubjectService.getSubjectByTitle(databaseTest, 'subjj').id
+    assert not QueueService.isQueueExist(databaseTest, subjId)
+
+    delete_test_subj(client)
+
+#8
+@pytest.mark.system
+def test_delete_cancel(client, databaseTest):
+    create_test_queue(client)
+    sendAndWaitAny(client, '/delete')
+    for message in client.get_chat_history(chat_id, limit=1):
+        assert message.text == 'По какому предмету ты хочешь удалить очередь?'
+    sendAndWaitAny(client, '❌ Отмена')
+
+    for message in client.get_chat_history(chat_id, limit=1):
+        assert message.text == 'Команда отменена'
+    subjId = SubjectService.getSubjectByTitle(databaseTest, 'subjj').id
+    assert QueueService.isQueueExist(databaseTest, subjId)
+
+    sendAndWaitAny(client, '/delete')
+    for message in client.get_chat_history(chat_id, limit=1):
+        assert message.text == 'По какому предмету ты хочешь удалить очередь?'
+    sendAndWaitAny(client, 'incorrect_sub:?')
+
+    for message in client.get_chat_history(chat_id, limit=1):
+        assert message.text == 'Команда отменена'
+
+    subjId = SubjectService.getSubjectByTitle(databaseTest, 'subjj').id
+    assert QueueService.isQueueExist(databaseTest, subjId)
+
+    delete_test_subj(client)
 
 
 # 9
-# @pytest.mark.system
-# def test_show(client, chat_id):
-#     client.send_message(chat_id, '/subject')
-#     time.sleep(DELAY)
-#     client.send_message(chat_id, 'subject for show')
-#     time.sleep(DELAY)
-#     client.send_message(chat_id, '/create')
-#     expected = ("По какому предмету ты хочешь создать очередь?")
-#     time.sleep(DELAY)
-#     for message in client.get_chat_history(chat_id, limit=1):
-#         assert message.text == expected
-#     client.send_message(chat_id, 'subject for show')
-#     expected = ("Создана очередь по subject for show")
-#     time.sleep(DELAY)
-#     for message in client.get_chat_history(chat_id, limit=1):
-#         assert message.text == expected
-#     client.send_message(chat_id, '/show')
-#     time.sleep(DELAY)
-#     client.send_message(chat_id, 'subject for show')
-#     time.sleep(DELAY)
-#     expected = ("Очередь по subject for show:")
-#     for message in client.get_chat_history(chat_id, limit=1):
-#         assert message.text == expected
-#
-#     client.send_message(chat_id, '/delete')
-#     time.sleep(DELAY)
-#     client.send_message(chat_id, 'Очередь по subject for show')
-#     time.sleep(DELAY)
-#     client.send_message(chat_id, '/removesubject')
-#     time.sleep(DELAY)
-#     client.send_message(chat_id, 'subject for show')
-#     time.sleep(DELAY)
+@pytest.mark.system
+def test_show(client, databaseTest):
+    create_test_queue(client)
+    sendAndWaitAny(client, '/show')
+    sendAndWaitAny(client, 'subjj')
+
+    for message in client.get_chat_history(chat_id, limit=1):
+        assert message.text == 'Очередь по subjj:'
+
+    subjId = SubjectService.getSubjectByTitle(databaseTest, 'subjj').id
+    queuqId = QueueService.getQueueBySubjectId(databaseTest, subjId).id
+    assert (QueueService.getCountMembersInQueue(databaseTest, queuqId), 0)
+
+    delete_test_subj(client)
 
 
 # 10

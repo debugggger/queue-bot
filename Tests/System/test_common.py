@@ -43,7 +43,6 @@ def checkResponce(client, text: str, responceText: str, timeout = 30):
     assert message.text == responceText
     return lastMessage.from_user.id
 
-
 @pytest.fixture(scope="session")
 def client():
     load_dotenv()
@@ -76,21 +75,22 @@ def beforeTest(databaseTest):
 
     yield
 
-def create_test_subj(client, chat_id):
+def create_test_subj(client):
     sendAndWaitAny(client, '/subject')
-    sendAndWaitAny(client, 'subject')
+    sendAndWaitAny(client, 'subjj')
 
-def create_test_queue(client, chat_id):
-    create_test_subj(client, chat_id)
+def delete_test_subj(client):
+    sendAndWaitAny(client, '/delete')
+    sendAndWaitAny(client, 'Очередь по subjj')
+    sendAndWaitAny(client, '/removesubject')
+    sendAndWaitAny(client, 'subjj')
+
+def create_test_queue(client):
+    create_test_subj(client)
 
     checkResponce(client, '/create', 'По какому предмету ты хочешь создать очередь?')
-    sendAndWaitAny(client, 'subject')
-
-def delete_test_subj(client, chat_id):
-    sendAndWaitAny(client, '/delete')
-    sendAndWaitAny(client, 'Очередь по subject')
+    sendAndWaitAny(client, 'subjj')
 
 def clearDatabase(database):
     with database.connection.cursor() as cur:
         cur.execute("truncate queuemembers, queuesubjects, subjects")
-        
