@@ -169,8 +169,6 @@ def test_remove_subject(client, databaseTest):
 # 6
 @pytest.mark.system
 def test_create_queue(client, databaseTest):
-    checkResponce(client, '/removesubject', 'Удалить предмет')
-    checkResponce(client, 'subjj', 'Предмет удален')
     checkResponce(client, '/subject', 'Введи название нового предмета')
     checkResponce(client, 'subjj', 'Предмет subjj добавлен')
     checkResponce(client, '/create', 'По какому предмету ты хочешь создать очередь?')
