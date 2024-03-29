@@ -9,6 +9,7 @@ from dotenv import load_dotenv
 
 from Services.MemberService import MemberService
 from Services.SubjectService import SubjectService
+from Services.QueueService import QueueService
 from dbTest import DatabaseTest
 
 
@@ -111,7 +112,7 @@ def test_add_invalid_member(client, databaseTest):
                                       'Используйте не более 30 символов русского и английского алфавита.'
                                       'Также дефис, апостроф, пробел (но не более одного такого символа подряд).')
     # Проверяем, что пользователь НЕ был добавлен
-    assert not MemberService.getMemberByTgNum(databaseTest, int(clientId)).name == 'invalid*((&'
+    assert not MemberService.isMemberExistByTgNum(databaseTest, int(clientId))
 
 
 # 2
@@ -163,6 +164,23 @@ def test_remove_subject(client, databaseTest):
     checkResponce(client, 'subjj', 'Предмет удален')
     # Проверяем, что предмет был удален
     assert not SubjectService.isSubjectExist(databaseTest, 'subjj')
+
+
+# 6
+@pytest.mark.system
+def test_create_queue(client, databaseTest):
+    checkResponce(client, '/subject', 'Введи название нового предмета')
+    checkResponce(client, 'subjj', 'Предмет subjj добавлен')
+    checkResponce(client, '/create', 'По какому предмету ты хочешь создать очередь?')
+    sendAndWaitAny(client, 'subjj')
+    checkResponce(client, 'subjj', 'Создана очередь по subjj')
+    assert QueueService.isQueueExist(databaseTest,
+                                     SubjectService.getSubjectByTitle(databaseTest, 'subjj').id_subject)
+    checkResponce(client, '/delete', 'По какому предмету ты хочешь создать очередь?')
+    sendAndWaitAny(client, 'subjj')
+    checkResponce(client, 'Очередь по subjj', 'Очередь удалена')
+    checkResponce(client, '/removesubject', 'Удалить предмет')
+    checkResponce(client, 'subjj', 'Предмет удален')
 
 
 
