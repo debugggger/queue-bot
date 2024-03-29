@@ -134,3 +134,19 @@ def test_confirm(client, client2, databaseTest):
     queue: Queue = QueueService.getQueueBySubjectTitle(databaseTest, 'subjj')
     assert len(list(filter(lambda m: int(m.member.tgNum) == msg1.from_user.id and m.placeNumber == 2, queue.members))) == 1
     assert len(list(filter(lambda m: int(m.member.tgNum) == msg2.from_user.id and m.placeNumber == 1, queue.members))) == 1
+
+# 18
+@pytest.mark.systemR
+def test_auto_upd(client, databaseTest):
+    create_test_queue(client)
+    checkResponce(client, '/show', 'По какому предмету ты хочешь просмотреть очередь?')
+    checkResponce(client, 'subjj', 'Очередь по subjj:')
+
+    create_user(client)
+
+    checkResponce(client, '/join', 'Выбрана очередь по subjj:\nВыбери место для записи')
+    checkResponce(client, 'Первое свободное', 'Ты записан на 1 место')
+
+    for message in client.get_chat_history(chat_id, limit=10):
+        if 'Очередь по subjj:' in message.text:
+            assert message.text != 'Очередь по subjj:\n1 - test-name'

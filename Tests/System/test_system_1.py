@@ -82,7 +82,6 @@ def test_remove_subject(client, databaseTest):
 # 6
 @pytest.mark.system
 def test_create_queue(client, databaseTest):
-
     create_test_subj(client)
     subjId = SubjectService.getSubjectByTitle(databaseTest, 'subjj').id
     assert not QueueService.isQueueExist(databaseTest, subjId)
@@ -139,40 +138,21 @@ def test_show(client, databaseTest):
     assert QueueService.getCountMembersInQueue(databaseTest, queuqId) == 0
 
 # 10
-@pytest.mark.system
-def test_auto_upd(client, databaseTest):
-    create_test_queue(client)
-    sendAndWaitAny(client, '/show')
-    sendAndWaitAny(client, 'subjj')
-    for message in client.get_chat_history(chat_id, limit=1):
-        assert message.text == 'Очередь по subjj:'
+@pytest.mark.systemR
+def test_confirm_empty(client):
+    checkResponce(client, '/confirm', 'Для использования этой команды тебе нужно записаться в списочек member-ов')
 
-    create_user(client)
-
-    checkResponce(client, '/join', 'Выбрана очередь по subjj:\nВыбери место для записи')
-    checkResponce(client, 'Первое свободное', 'Ты записан на 1 место')
-
-    for message in client.get_chat_history(chat_id, limit=10):
-        if 'Очередь по subjj:' in message.text:
-            assert message.text != 'Очередь по subjj:\n1 - test-name'
-    delete_test_subj(client)
-
-# 10
-# @pytest.mark.system
-# def test_confirm_empty(client, chat_id):
-#     client.send_message(chat_id, '/confirm')
-#     expected = ("Извините, у вас еще нет запросов на смену места")
-#     time.sleep(DELAY)
-#     for message in client.get_chat_history(chat_id, limit=1):
-#         assert message.text == expected
+    createMember(client)
+    checkResponce(client, '/confirm', 'Извините, у вас еще нет запросов на смену места')
 
 
 # 11
-# @pytest.mark.system
-# def test_reject_empty(client, chat_id):
-#     client.send_message(chat_id, '/reject')
-#     expected = ("Ты еще не записан ни в одну очередь. Ух, ты!")
-#     time.sleep(DELAY)
-#     for message in client.get_chat_history(chat_id, limit=1):
-#         assert message.text == expected
+@pytest.mark.systemR
+def test_reject_empty(client):
+    createMember(client)
+    checkResponce(client, '/reject', 'Ты еще не записан ни в одну очередь. Ух, ты!')
 
+    create_test_queue(client)
+    checkResponce(client, '/join', 'Выбрана очередь по subjj:\nВыбери место для записи')
+    checkResponce(client, 'Первое свободное', 'Ты записан на 1 место')
+    checkResponce(client, '/reject', 'Вы не начинали смену мест')
