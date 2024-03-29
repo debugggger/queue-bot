@@ -75,7 +75,7 @@ def commandsList(message):
                      "/replaceto - смена мест c выбором очереди\n"
                      "/replace - смена места в последней очереди\n"
                      "/removefrom - выход из очереди\n"
-                     "/removesubject - выход из очереди\n"
+                     "/removesubject - удаление предмета\n"
                      "/reject - отклонение запроса смены мест\n"
                      "/confirm - подтверждение запроса смены мест\n")
 

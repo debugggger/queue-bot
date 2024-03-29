@@ -8,6 +8,7 @@ from pyrogram import Client
 from dotenv import load_dotenv
 
 from Services.MemberService import MemberService
+from Services.SubjectService import SubjectService
 from dbTest import DatabaseTest
 
 
@@ -101,48 +102,71 @@ def databaseTest():
     return DatabaseTest()
 
 
+# 1
 @pytest.mark.system
-def test_valid_member(client, databaseTest):
+def test_add_invalid_member(client, chat_id):
+    clientId = checkResponce(client, '/member', 'Для продолжения нажми кнопку ввод')
+    sendAndWaitAny(client, 'Ввод')
+    checkResponce(client, 'invalid*((&', 'Отображаемое имя некорректно.\n'
+                                      'Используйте не более 30 символов русского и английского алфавита.'
+                                      'Также дефис, апостроф, пробел (но не более одного такого символа подряд).')
+    # Проверяем, что пользователь НЕ был добавлен
+    assert not MemberService.getMemberByTgNum(databaseTest, int(clientId)).name == 'invalid*((&'
+
+
+# 2
+@pytest.mark.system
+def test_add_valid_member(client, databaseTest):
     clientId = checkResponce(client, '/member', 'Для продолжения нажми кнопку ввод')
     sendAndWaitAny(client, 'Ввод')
     checkResponce(client, 'test-name', 'Отображаемое имя установлено')
     assert MemberService.getMemberByTgNum(databaseTest, int(clientId)).name == 'test-name'
+    # Проверяем второй раз, что мы меняем имя тому же пользователю
+    clientId = checkResponce(client, '/member', 'Для продолжения нажми кнопку ввод')
+    sendAndWaitAny(client, 'Ввод')
+    checkResponce(client, 'another-name', 'Отображаемое имя установлено')
+    assert MemberService.getMemberByTgNum(databaseTest, int(clientId)).name == 'another-name'
+
+
+# 3
+@pytest.mark.system
+def test_add_invalid_subject(client):
+    checkResponce(client, '/subject', 'Введи название нового предмета')
+    checkResponce(client, 'thisisverylongtitleforsubjectmore30letters', 'Название предмета некорректно.\nИспользуйте не более 30 символов русского и английского алфавита.')
+    # Проверяем, что предмет НЕ был добавлен
+    assert not SubjectService.getSubjectByTitle(databaseTest, 'thisisverylongtitleforsubjectmore30letters').title == 'thisisverylongtitleforsubjectmore30letters'
+
+
+# 4
+@pytest.mark.system
+def test_add_valid_subject(client, databaseTest):
+    checkResponce(client, '/subject', 'Введи название нового предмета')
+    checkResponce(client, 'subjj', 'Предмет subjj добавлен')
+    # Проверяем, что предмет был добавлен
+    assert SubjectService.getSubjectByTitle(databaseTest, 'subjj').title == 'subjj'
+
+    checkResponce(client, '/subject', 'Введи название нового предмета')
+    checkResponce(client, 'subjj', 'Предмет subjj уже существует')
+    # Проверяем, что таких предметов все равно осталась одна штука
+    assert SubjectService.isSubjectExist(databaseTest, 'subjj')
+
+    sendAndWaitAny(client, '/removesubject')
+    sendAndWaitAny(client, 'subjj')
+
+
+# 5
+@pytest.mark.system
+def test_remove_subject(client, chat_id):
+    checkResponce(client, '/subject', 'Введи название нового предмета')
+    checkResponce(client, 'subjj', 'Предмет subjj добавлен')
+    checkResponce(client, chat_id, '/removesubject', 'Удалить предмет')
+    checkResponce(client, chat_id, 'subjj', 'Предмет удален')
+    # Проверяем, что предмет был удален
+    assert not SubjectService.isSubjectExist(databaseTest, 'subjj')
 
 
 
 
-#
-# @pytest.mark.system
-# def test_subject_incorrectTitle(client):
-#     checkResponce(client, '/subject', 'Введи название нового предмета')
-#     checkResponce(client, 'test-subj', 'Название предмета некорректно.\nИспользуйте не более 30 символов русского и английского алфавита.')
-#
-# @pytest.mark.system
-# def test_subject(client):
-#     checkResponce(client, '/subject', 'Введи название нового предмета')
-#     checkResponce(client, 'subjj', 'Предмет subjj добавлен')
-#     checkResponce(client, '/subject', 'Введи название нового предмета')
-#     checkResponce(client, 'subjj', 'Предмет subjj уже существует')
-#
-#     sendAndWaitAny(client, '/removesubject')
-#     sendAndWaitAny(client, 'subjj')
-#
-# @pytest.mark.system
-# def test_invalid_name(client, chat_id):
-#     client.send_message(chat_id, '/member')
-#     time.sleep(DELAY)
-#     for message in client.get_chat_history(chat_id, limit=1):
-#         assert message.text == 'Для продолжения нажми кнопку ввод'
-#     client.send_message(chat_id, 'Ввод')
-#     time.sleep(DELAY)
-#     client.send_message(chat_id, 'invalid*((&')
-#     time.sleep(DELAY)
-#     for message in client.get_chat_history(chat_id, limit=1):
-#         assert message.text == ('Отображаемое имя некорректно.\n'
-#                                       'Используйте не более 30 символов русского и английского алфавита.'
-#                                       'Также дефис, апостроф, пробел (но не более одного такого символа подряд).')
-#
-#
 # @pytest.mark.system
 # def test_delete(client, chat_id):
 #     client.send_message(chat_id, '/subject')
@@ -211,15 +235,6 @@ def test_valid_member(client, databaseTest):
 #     client.send_message(chat_id, 'Очередь по incorrect_subj_test')
 #
 #
-#
-# @pytest.mark.system
-# def test_removesubject(client, chat_id):
-#     client.send_message(chat_id, '/subject')
-#     time.sleep(DELAY)
-#     client.send_message(chat_id, 'subjj')
-#
-#     checkResponce(client, chat_id, '/removesubject', 'Удалить предмет')
-#     checkResponce(client, chat_id, 'subjj', 'Предмет удален')
 #
 #
 # @pytest.mark.system
