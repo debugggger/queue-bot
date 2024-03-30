@@ -139,28 +139,38 @@ def test_delete_cancel(client, databaseTest):
 
 # 10
 @pytest.mark.system
-def test_confirm_empty(client):
-    checkResponce(client, '/confirm', 'Для использования этой команды тебе нужно записаться в списочек member-ов')
+def test_confirm_empty(client, databaseTest):
+    id1 = checkResponce(client, '/confirm', 'Для использования этой команды тебе нужно записаться в списочек member-ов')
+    assert not MemberService.isMemberExistByTgNum(databaseTest, id1)
 
     createMember(client)
+    assert MemberService.isMemberExistByTgNum(databaseTest, id1)
+    
     checkResponce(client, '/confirm', 'Извините, у вас еще нет запросов на смену места')
 
 # 11
 @pytest.mark.system
-def test_reject_empty(client):
-    createMember(client)
+def test_reject_empty(client, databaseTest):
+    tgNum = createMember(client).from_user.id
+    member = MemberService.getMemberByTgNum(databaseTest, tgNum)
+    
     checkResponce(client, '/reject', 'Ты еще не записан ни в одну очередь. Ух, ты!')
+    assert not QueueService.isMemberInAnyQueue(databaseTest, member.id)
 
     create_test_queue(client)
     checkResponce(client, '/join', 'Выбрана очередь по subjj:\nВыбери место для записи')
     checkResponce(client, 'Первое свободное', 'Ты записан на 1 место')
+    
+    queue: Queue = QueueService.getQueueBySubjectTitle(databaseTest, 'subjj')
+    assert len(list(filter(lambda m: int(m.member.tgNum) == tgNum and m.placeNumber == 1, queue.members))) == 1
+    
     checkResponce(client, '/reject', 'Вы не начинали смену мест')
 
 # 12
 @pytest.mark.system
 def test_show2(client, client2, databaseTest):
-    name1 = createMember(client)
-    name2 = createMember(client2)
+    name1 = createMember(client).from_user.first_name
+    name2 = createMember(client2).from_user.first_name
     create_test_queue(client)
 
     checkResponce(client, '/join', 'Выбрана очередь по subjj:\nВыбери место для записи')

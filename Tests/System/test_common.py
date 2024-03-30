@@ -104,6 +104,5 @@ def clearDatabase(database):
 def createMember(client):
     message: types.Message = sendAndWaitAny(client, '/member')
     sendAndWaitAny(client, 'Ввод')
-    name = message.from_user.first_name
-    sendAndWaitAny(client, name)
-    return name
+    sendAndWaitAny(client, message.from_user.first_name)
+    return message
