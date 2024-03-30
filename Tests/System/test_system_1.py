@@ -87,7 +87,7 @@ def test_create_queue(client, databaseTest):
     assert not QueueService.isQueueExist(databaseTest, subjId)
 
     checkResponce(client, '/create', 'По какому предмету ты хочешь создать очередь?')
-    sendAndWaitAny(client, 'subjj')
+    checkResponce(client, 'subjj', 'Создана очередь по subjj')
 
     assert QueueService.isQueueExist(databaseTest, subjId)
 
@@ -106,7 +106,7 @@ def test_delete(client, databaseTest):
     subjId = SubjectService.getSubjectByTitle(databaseTest, 'subjj').id
     assert not QueueService.isQueueExist(databaseTest, subjId)
 
-#8
+# 8
 @pytest.mark.system
 def test_delete_cancel(client, databaseTest):
     create_test_queue(client)
@@ -144,7 +144,6 @@ def test_confirm_empty(client):
 
     createMember(client)
     checkResponce(client, '/confirm', 'Извините, у вас еще нет запросов на смену места')
-
 
 # 11
 @pytest.mark.system

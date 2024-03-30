@@ -25,25 +25,27 @@ def test_create_cancel(client, databaseTest):
     checkResponce(client, '/create', 'По какому предмету ты хочешь создать очередь?')
     checkResponce(client, '❌ Отмена', 'Команда отменена')
 
-
     afterQueuesCount = len(QueueService.getQueues(databaseTest))
 
     assert beforeQueuesCount == afterQueuesCount
 
 # 13
 @pytest.mark.system
-def test_create_correct(client, databaseTest):
-    sendAndWaitAny(client, '/subject')
-    sendAndWaitAny(client, 'subject for create')
-
-    subject = SubjectService.getSubjectByTitle(databaseTest, 'subject for create')
-    assert not QueueService.isQueueExist(databaseTest, subject.id)
+def test_create_exists(client, databaseTest):
+    create_test_queue(client)
+    subject = SubjectService.getSubjectByTitle(databaseTest, 'subjj')
+    
+    assert QueueService.isQueueExist(databaseTest, subject.id)
+    beforeQueuesCount = len(QueueService.getQueues(databaseTest))
 
     checkResponce(client, '/create', 'По какому предмету ты хочешь создать очередь?')
-    checkResponce(client, 'subject for create', 'Создана очередь по subject for create')
+    checkResponce(client, 'subjj', 'Очередь по этому предмету уже существует')
 
     assert QueueService.isQueueExist(databaseTest, subject.id)
-
+    
+    afterQueuesCount = len(QueueService.getQueues(databaseTest))
+    assert beforeQueuesCount == afterQueuesCount
+    
 # 14
 @pytest.mark.system
 def test_join_last(client, client2, databaseTest):
@@ -153,7 +155,7 @@ def test_auto_upd(client, databaseTest):
             assert message.text != 'Очередь по subjj:\n1 - test-name'
 
 
-# 18
+# 19
 @pytest.mark.system
 def test_notification(client, client2, databaseTest):
     create_test_queue(client)
@@ -169,7 +171,7 @@ def test_notification(client, client2, databaseTest):
     for message in client.get_chat_history(chat_id, limit=1):
         assert message.text == '@' + mes.from_user.username + ' твоя очередь сдавать'
 
-#19
+# 20
 @pytest.mark.system
 def test_remove(client, databaseTest):
     create_test_queue(client)
@@ -182,3 +184,38 @@ def test_remove(client, databaseTest):
     checkResponce(client, '/removefrom', 'Из какой очереди ты хочешь выйти')
     checkResponce(client, 'Очередь по subjj', 'Ты вышел из этой очереди')
     assert not QueueService.isMemberInQueue(databaseTest, queue.id, member.id)
+
+# 21
+@pytest.mark.system
+def test_join_num_last(client, client2, databaseTest):
+    createMember(client)
+    createMember(client2)
+    create_test_queue(client)
+    
+    checkResponce(client, '/join', 'Выбрана очередь по subjj:\nВыбери место для записи')
+    checkResponce(client, 'Определенное', 'Введи место для записи')
+    id1 = checkResponce(client, '2', 'Ты записан на 2 место')
+
+    checkResponce(client2, '/join', 'Выбрана очередь по subjj:\nВыбери место для записи')
+    id2 = checkResponce(client2, 'Последнее свободное', 'Ты записан на 1 место')
+
+    queue: Queue = QueueService.getQueueBySubjectTitle(databaseTest, 'subjj')
+    assert len(list(filter(lambda m: int(m.member.tgNum) == id1 and m.placeNumber == 2, queue.members))) == 1
+    assert len(list(filter(lambda m: int(m.member.tgNum) == id2 and m.placeNumber == 1, queue.members))) == 1
+
+# 22
+@pytest.mark.systemR
+def test_remove_subject_with_queue(client, databaseTest):
+    create_test_queue(client)
+    assert SubjectService.isSubjectExist(databaseTest, 'subjj')
+    
+    subject = SubjectService.getSubjectByTitle(databaseTest, 'subjj')
+    assert QueueService.isQueueExist(databaseTest, subject.id)
+    
+    checkResponce(client, '/removesubject', 'Удалить предмет')
+    checkResponce(client, 'subjj', 'Предмет удален. По этому предмету была очередь, она тоже удалена')
+    
+    # Проверяем, что предмет и очередь были удалены
+    assert not SubjectService.isSubjectExist(databaseTest, 'subjj')
+    assert not QueueService.isQueueExist(databaseTest, subject.id)
+    

@@ -58,9 +58,10 @@ class SubjectHandlers(BaseHandler):
             if QueueService.isQueueExist(self.database, subject.id):
                 q = QueueService.getQueueBySubjectId(self.database, subject.id)
                 QueueService.deleteQueue(self.database, q.id)
-                self.bot.reply_to(message, 'По этому предмету была очередь, она тоже удалена',
+                SubjectService.removeSubject(self.database, subjectTitle)
+                self.bot.reply_to(message, 'Предмет удален. По этому предмету была очередь, она тоже удалена',
                                     reply_markup=km.Remove)
-
+                return
 
             SubjectService.removeSubject(self.database, subjectTitle)
             self.bot.reply_to(message, 'Предмет удален',
