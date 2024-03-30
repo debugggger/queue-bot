@@ -7,7 +7,7 @@ from test_unit_common import *
 
 @pytest.mark.unit
 def test_is_subject_exist(databaseTest):
-    subject_title = "тркпо"
+    subject_title = "newsubjj"
     assert not SubjectService.isSubjectExist(databaseTest, subject_title)
     SubjectService.addSubject(databaseTest, subject_title)
     assert SubjectService.isSubjectExist(databaseTest, subject_title)
@@ -33,13 +33,13 @@ def test_get_subject_by_title(databaseTest):
 
 @pytest.mark.unit
 def test_add_subject(databaseTest):
-    subject_title = "опркимаргшшваир"
+    subject_title = "newsubjj"
     SubjectService.addSubject(databaseTest, subject_title)
     assert SubjectService.isSubjectExist(databaseTest, subject_title)
 
 @pytest.mark.unit
 def test_remove_subject(databaseTest):
-    subject_title = "опркимаргшшваир"
+    subject_title = "newsubjj"
     SubjectService.addSubject(databaseTest, subject_title)
     SubjectService.removeSubject(databaseTest, subject_title)
     assert not SubjectService.isSubjectExist(databaseTest, subject_title)
