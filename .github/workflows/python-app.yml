@@ -30,11 +30,11 @@ jobs:
     env:
       TOKEN: ${{ secrets.TOKEN }}
       chat_id: ${{ secrets.CHAT_ID }}
-      host: "127.0.0.1"
-      user: "queue_db_admin"
-      password: "raBOTyaga"
-      db_name: "queue_db"
-      port: 5432
+      host: ${{ secrets.HOST }}
+      user: ${{ secrets.USER }}
+      password: ${{ secrets.PASSWORD }}
+      db_name: ${{ secrets.DB_NAME }}
+      port: ${{ secrets.PORT }}
       api_id: ${{ secrets.API_ID }}
       api_hash: ${{ secrets.API_HASH }}
       session_string: ${{ secrets.API_SESSION }}
