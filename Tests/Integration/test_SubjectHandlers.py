@@ -152,6 +152,5 @@ def test_SubjectHandlers_subjectTextHandler_removeExistsWithQueue(subjectHandler
         mock_removeSubject.assert_called_once_with(subjectHandlers.database, subject.title)
         mock_deleteQueue.assert_called_once_with(subjectHandlers.database, queue.id)
 
-        assert subjectHandlers.bot.reply_to.call_count == 2
-        subjectHandlers.bot.reply_to.assert_any_call(message, 'По этому предмету была очередь, она тоже удалена', reply_markup=km.Remove)
-        subjectHandlers.bot.reply_to.assert_any_call(message, 'Предмет удален', reply_markup=km.Remove)
+        assert subjectHandlers.bot.reply_to.call_count == 1
+        subjectHandlers.bot.reply_to.assert_any_call(message, 'Предмет удален. По этому предмету была очередь, она тоже удалена', reply_markup=km.Remove)

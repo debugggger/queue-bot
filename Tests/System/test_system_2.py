@@ -17,7 +17,7 @@ from test_common import *
 from utils import formReplaceRequest
 
 
-# 12
+# 13
 @pytest.mark.system
 def test_create_cancel(client, databaseTest):
     beforeQueuesCount = len(QueueService.getQueues(databaseTest))
@@ -29,7 +29,7 @@ def test_create_cancel(client, databaseTest):
 
     assert beforeQueuesCount == afterQueuesCount
 
-# 13
+# 14
 @pytest.mark.system
 def test_create_exists(client, databaseTest):
     create_test_queue(client)
@@ -46,7 +46,7 @@ def test_create_exists(client, databaseTest):
     afterQueuesCount = len(QueueService.getQueues(databaseTest))
     assert beforeQueuesCount == afterQueuesCount
     
-# 14
+# 15
 @pytest.mark.system
 def test_join_last(client, client2, databaseTest):
     createMember(client)
@@ -67,14 +67,12 @@ def test_join_last(client, client2, databaseTest):
     assert len(list(filter(lambda m: int(m.member.tgNum) == id1 and m.placeNumber == count, queue.members))) == 1
     assert len(list(filter(lambda m: int(m.member.tgNum) == id2 and m.placeNumber == count-1, queue.members))) == 1
 
-# 15
+# 16
 @pytest.mark.system
 def test_join_first(client, client2, databaseTest):
     createMember(client)
     createMember(client2)
     create_test_queue(client)
-
-    count = MemberService.getMembersCount(databaseTest)
 
     checkResponce(client, '/join', 'Выбрана очередь по subjj:\nВыбери место для записи')
     id1 = checkResponce(client, 'Первое свободное', 'Ты записан на 1 место')
@@ -86,7 +84,7 @@ def test_join_first(client, client2, databaseTest):
     assert len(list(filter(lambda m: int(m.member.tgNum) == id1 and m.placeNumber == 1, queue.members))) == 1
     assert len(list(filter(lambda m: int(m.member.tgNum) == id2 and m.placeNumber == 2, queue.members))) == 1
 
-# 16
+# 17
 @pytest.mark.system
 def test_join_num(client, client2, databaseTest):
     createMember(client)
@@ -105,7 +103,7 @@ def test_join_num(client, client2, databaseTest):
     assert len(list(filter(lambda m: int(m.member.tgNum) == id1 and m.placeNumber == 2, queue.members))) == 1
     assert len(list(filter(lambda m: int(m.member.tgNum) == id2 and m.placeNumber == 1, queue.members))) == 1
 
-# 17
+# 18
 @pytest.mark.system
 def test_confirm(client, client2, databaseTest):
     createMember(client)
@@ -138,7 +136,7 @@ def test_confirm(client, client2, databaseTest):
     assert len(list(filter(lambda m: int(m.member.tgNum) == msg1.from_user.id and m.placeNumber == 2, queue.members))) == 1
     assert len(list(filter(lambda m: int(m.member.tgNum) == msg2.from_user.id and m.placeNumber == 1, queue.members))) == 1
 
-# 18
+# 19
 @pytest.mark.system
 def test_auto_upd(client, databaseTest):
     create_test_queue(client)
@@ -155,7 +153,7 @@ def test_auto_upd(client, databaseTest):
             assert message.text != 'Очередь по subjj:\n1 - test-name'
 
 
-# 19
+# 20
 @pytest.mark.system
 def test_notification(client, client2, databaseTest):
     create_test_queue(client)
@@ -171,7 +169,7 @@ def test_notification(client, client2, databaseTest):
     for message in client.get_chat_history(chat_id, limit=1):
         assert message.text == '@' + mes.from_user.username + ' твоя очередь сдавать'
 
-# 20
+# 21
 @pytest.mark.system
 def test_remove(client, databaseTest):
     create_test_queue(client)
@@ -185,7 +183,7 @@ def test_remove(client, databaseTest):
     checkResponce(client, 'Очередь по subjj', 'Ты вышел из этой очереди')
     assert not QueueService.isMemberInQueue(databaseTest, queue.id, member.id)
 
-# 21
+# 22
 @pytest.mark.system
 def test_join_num_last(client, client2, databaseTest):
     createMember(client)
@@ -203,7 +201,7 @@ def test_join_num_last(client, client2, databaseTest):
     assert len(list(filter(lambda m: int(m.member.tgNum) == id1 and m.placeNumber == 2, queue.members))) == 1
     assert len(list(filter(lambda m: int(m.member.tgNum) == id2 and m.placeNumber == 1, queue.members))) == 1
 
-# 22
+# 23
 @pytest.mark.system
 def test_remove_subject_with_queue(client, databaseTest):
     create_test_queue(client)
