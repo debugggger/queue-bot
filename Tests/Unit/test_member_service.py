@@ -4,10 +4,7 @@ from Services.MemberService import MemberService
 
 from dbTest import DatabaseTest
 
-
-@pytest.fixture(scope='function')
-def databaseTest():
-    return DatabaseTest()
+from test_unit_common import *
 
 @pytest.mark.unit
 def test_add_member(databaseTest):

@@ -3,11 +3,7 @@ from Entities.Subject import Subject
 from Services.SubjectService import SubjectService
 from dbTest import DatabaseTest
 
-
-@pytest.fixture(scope='function')
-def databaseTest():
-    return DatabaseTest()
-
+from test_unit_common import *
 
 @pytest.mark.unit
 def test_is_subject_exist(databaseTest):

@@ -65,6 +65,9 @@ jobs:
                                                                                             CONNECTION LIMIT = -1
                                                                                             IS_TEMPLATE = False;'
         psql -U postgres -h localhost -p ${{ job.services.postgres.ports['5432'] }} -d queue_db -a -f DatabaseDumps/create_db_structure.sql
+    - name: Run Unit tests
+      run: |
+        pytest -m unit
     - name: Run Integration tests
       run: |
         pytest -m integration
@@ -74,3 +77,6 @@ jobs:
     - name: Run System tests
       run: |
         pytest -m system
+    - name: Stop tg-bot
+      run: |
+        pkill -f queueBot.py
