@@ -152,7 +152,6 @@ def test_auto_upd(client, databaseTest):
         if 'Очередь по subjj:' in message.text:
             assert message.text != 'Очередь по subjj:\n1 - test-name'
 
-
 # 20
 @pytest.mark.system
 def test_notification(client, client2, databaseTest):
@@ -164,10 +163,13 @@ def test_notification(client, client2, databaseTest):
     checkResponce(client2, '/join', 'Выбрана очередь по subjj:\nВыбери место для записи')
     mes = sendAndWaitAny(client2, 'Первое свободное')
     checkResponce(client, '/removefrom', 'Из какой очереди ты хочешь выйти')
-    checkResponce(client, 'Очередь по subjj', 'Ты вышел из этой очереди')
-    time.sleep(1)
-    for message in client.get_chat_history(chat_id, limit=1):
-        assert message.text == '@' + mes.from_user.username + ' твоя очередь сдавать'
+    sendAndWaitAny(client, 'Очередь по subjj')
+    
+    gen = client.get_chat_history(chat_id, limit=2)
+    notifMsg = next(gen)
+    exitMsg = next(gen)
+    assert exitMsg.text == 'Ты вышел из этой очереди'
+    assert notifMsg.text == '@' + mes.from_user.username + ' твоя очередь сдавать'
 
 # 21
 @pytest.mark.system

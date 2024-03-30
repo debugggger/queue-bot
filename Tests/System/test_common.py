@@ -18,12 +18,14 @@ DELAY = 0.8
 def waitBotMessage(client, timeout = 30):
     startTime = time.time()
     while True:
-        if next(client.get_chat_history(chat_id, limit=1)).from_user.id == bot_id:
+        message = next(client.get_chat_history(chat_id, limit=1))
+        if message.from_user.id == bot_id:
             break
         if time.time() - startTime > timeout:
             assert False
             break
         time.sleep(DELAY)
+    return message
 
 def sendAndWaitAny(client, text: str):
     message = client.send_message(chat_id, text)
