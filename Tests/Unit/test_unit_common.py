@@ -2,6 +2,7 @@ import pytest
 
 from dbTest import DatabaseTest
 
+
 @pytest.fixture(scope='session')
 def databaseTest():
     return DatabaseTest()
@@ -26,6 +27,9 @@ def fillTestData(database):
         cur.execute("INSERT INTO public.queuemembers (queue_id, member_id, entry_time, place_number, entry_type) VALUES (1, 3, '2024-02-18 23:21:16.334518', 3, 0)")
         cur.execute("INSERT INTO public.queuemembers (queue_id, member_id, entry_time, place_number, entry_type) VALUES (2, 1, '2024-02-18 23:34:16.334518', 3, 2)")
         cur.execute("INSERT INTO public.queuemembers (queue_id, member_id, entry_time, place_number, entry_type) VALUES (2, 3, '2024-02-18 23:38:16.334518', 2, 1)")
+        cur.execute("SELECT pg_catalog.setval('public.members_id_member_seq', 4, true)")
+        cur.execute("SELECT pg_catalog.setval('public.queuesubjects_id_queue_seq', 4, true)")
+        cur.execute("SELECT pg_catalog.setval('public.subjects_id_subject_seq', 4, true)")
 
 @pytest.fixture(autouse=True)
 def beforeTest(databaseTest):
