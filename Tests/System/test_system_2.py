@@ -204,7 +204,7 @@ def test_join_num_last(client, client2, databaseTest):
     assert len(list(filter(lambda m: int(m.member.tgNum) == id2 and m.placeNumber == 1, queue.members))) == 1
 
 # 22
-@pytest.mark.systemR
+@pytest.mark.system
 def test_remove_subject_with_queue(client, databaseTest):
     create_test_queue(client)
     assert SubjectService.isSubjectExist(databaseTest, 'subjj')
