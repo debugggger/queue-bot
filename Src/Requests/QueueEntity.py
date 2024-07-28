@@ -67,6 +67,14 @@ class QueueEntity(BaseHandler):
                 else:
                     QueueService.createQueue(self.database, subject.id)
                     self.bot.reply_to(message, "Создана очередь по " + subject.title, reply_markup=km.Remove)
+
+                    members = [member.tgNum for member in MemberService.getMembers(self.database)]
+                    for tg_mem_num in members:
+                        try:
+                            self.bot.send_message(tg_mem_num, "Там создана очередь по " + subject.title + "... Поспеши занять место!")
+                        except:
+                            print('-')
+
             else:
                 self.bot.reply_to(message, 'Такого предмета нет',
                                   reply_markup=km.Remove)
