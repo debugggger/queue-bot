@@ -64,18 +64,18 @@ def possibilityCommand(message: telebot.types.Message):
 
 def commandsList(message):
     bot.send_message(message.chat.id,
-                     "можно воспользоваться следующими командами:\n"
+                     "Можно воспользоваться следующими командами:\n"
                      "/member - добавление в список пользователей\n"
-                     "/subject - добавление предмета\n"
+                     "/subject - добавление предмета (могут выполнять только администраторы)\n"
                      "/create - создание очереди\n"
-                     "/delete - удаление очереди\n"
+                     "/delete - удаление очереди (могут выполнять только администраторы)\n"
                      "/show - вывод очереди\n"
                      "/join - запись в последнюю очередь\n"
                      "/jointo - запись в любую из очередей\n"                     
                      "/replaceto - смена мест c выбором очереди\n"
                      "/replace - смена места в последней очереди\n"
                      "/removefrom - выход из очереди\n"
-                     "/removesubject - выход из очереди\n"
+                     "/removesubject - удаление предмета (могут выполнять только администраторы)\n"
                      "/reject - отклонение запроса смены мест\n"
                      "/confirm - подтверждение запроса смены мест\n")
 
@@ -90,6 +90,22 @@ def startCommand(message):
                      reply_markup=markup)
 
 commandHandlers: Dict[str, Callable[[telebot.types.Message], None]] = {
+    '/start@queue_2_0_bot': startCommand,
+    '/help@queue_2_0_bot': commandsList,
+    '/create@queue_2_0_bot': qEntity.createCommand,
+    '/delete@queue_2_0_bot': qEntity.deleteCommand,
+    '/member@queue_2_0_bot': userHandlers.memberCommand,
+    '/show@queue_2_0_bot': qEntity.showCommand,
+    '/jointo@queue_2_0_bot': qFun.jointoCommand,
+    '/join@queue_2_0_bot': qFun.joinCommand,
+    '/subject@queue_2_0_bot': subjectHandlers.subjectCommand,
+    '/removesubject@queue_2_0_bot': subjectHandlers.removesubjectCommand,
+    '/removefrom@queue_2_0_bot': removeHandlers.removefromCommand,
+    '/replaceto@queue_2_0_bot': replaceHandlers.replacetoCommand,
+    '/replace@queue_2_0_bot': replaceHandlers.replaceCommand,
+    '/reject@queue_2_0_bot': replaceHandlers.rejectCommand,
+    '/confirm@queue_2_0_bot': replaceHandlers.confirmCommand,
+
     '/start': startCommand,
     '/help': commandsList,
     '/create': qEntity.createCommand,
@@ -105,22 +121,6 @@ commandHandlers: Dict[str, Callable[[telebot.types.Message], None]] = {
     '/replace': replaceHandlers.replaceCommand,
     '/reject': replaceHandlers.rejectCommand,
     '/confirm': replaceHandlers.confirmCommand,
-
-    '/start@queeeeueeee_bot': startCommand,
-    '/help@queeeeueeee_bot': commandsList,
-    '/create@queeeeueeee_bot': qEntity.createCommand,
-    '/delete@queeeeueeee_bot': qEntity.deleteCommand,
-    '/member@queeeeueeee_bot': userHandlers.memberCommand,
-    '/show@queeeeueeee_bot': qEntity.showCommand,
-    '/jointo@queeeeueeee_bot': qFun.jointoCommand,
-    '/join@queeeeueeee_bot': qFun.joinCommand,
-    '/subject@queeeeueeee_bot': subjectHandlers.subjectCommand,
-    '/removesubject@queeeeueeee_bot': subjectHandlers.removesubjectCommand,
-    '/removefrom@queeeeueeee_bot': removeHandlers.removefromCommand,
-    '/replaceto@queeeeueeee_bot': replaceHandlers.replacetoCommand,
-    '/replace@queeeeueeee_bot': replaceHandlers.replaceCommand,
-    '/reject@queeeeueeee_bot': replaceHandlers.rejectCommand,
-    '/confirm@queeeeueeee_bot': replaceHandlers.confirmCommand,
 }
 
 callbackHandlers: Dict[str, Callable[[telebot.types.CallbackQuery], None]] = {
@@ -145,7 +145,7 @@ textHandlers: List[Callable[[telebot.types.Message], None]] = {
 
 @bot.message_handler(commands=['debug_chatid'])
 def commandsHandler(message: telebot.types.Message):
-    if not checkMessage(message, timeout=None):
+    if not checkMessage(message):
         return
 
     bot.send_message(message.chat.id, f'chat_id = {message.chat.id}')
@@ -153,7 +153,7 @@ def commandsHandler(message: telebot.types.Message):
 
 @bot.message_handler(func=lambda message: message.text.startswith('/'))
 def commandsHandler(message: telebot.types.Message):
-    if not checkMessage(message, chatId, timeout=None):
+    if not checkMessage(message, chatId):
         return
 
     if message.text in commandHandlers.keys():
@@ -161,7 +161,7 @@ def commandsHandler(message: telebot.types.Message):
 
 @bot.callback_query_handler(func = lambda callback: True)
 def callback_message(callback: telebot.types.CallbackQuery):
-    if not checkMessage(callback.message, chatId, timeout=None):
+    if not checkMessage(callback.message, chatId):
         return
 
     for key, handler in callbackHandlers.items():
@@ -170,7 +170,7 @@ def callback_message(callback: telebot.types.CallbackQuery):
 
 @bot.message_handler(func=lambda message: not message.text.startswith('/'))
 def handle_text(message: telebot.types.Message):
-    if not checkMessage(message, chatId, timeout=None):
+    if not checkMessage(message, chatId):
         return
 
     for textHandler in textHandlers:
@@ -178,7 +178,7 @@ def handle_text(message: telebot.types.Message):
 
 @bot.message_handler(content_types=['left_chat_member'])
 def handle_left_chat_member(message: telebot.types.Message):
-    if not checkMessage(message, chatId, timeout=None):
+    if not checkMessage(message, chatId):
         return
 
     #bot.send_message(message.chat.id, f"Пользователь с ID {message.left_chat_member.id} покинул чат.")

@@ -5,9 +5,9 @@ name: Python application
 
 on:
   push:
-    branches: [ "main", "dev" ]
+    branches: [ "dev" ]
   pull_request:
-    branches: [ "main", "dev" ]
+    branches: [ "dev" ]
 
 permissions:
   contents: read
@@ -16,6 +16,33 @@ jobs:
   build:
 
     runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:latest
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+    
+    env:
+      TOKEN: ${{ secrets.TOKEN }}
+      chat_id: ${{ secrets.CHAT_ID }}
+      host: ${{ secrets.HOST }}
+      user: ${{ secrets.USER }}
+      password: ${{ secrets.PASSWORD }}
+      db_name: ${{ secrets.DB_NAME }}
+      port: ${{ secrets.PORT }}
+      api_id: ${{ secrets.API_ID }}
+      api_hash: ${{ secrets.API_HASH }}
+      session_string: ${{ secrets.API_SESSION }}
+      api_id2: ${{ secrets.API_ID2 }}
+      api_hash2: ${{ secrets.API_HASH2 }}
+      session_string2: ${{ secrets.API_SESSION2 }}
+      bot_id: ${{ secrets.BOT_ID }}
+      PGPASSWORD: postgres
 
     steps:
     - uses: actions/checkout@v3
@@ -28,14 +55,28 @@ jobs:
         python -m pip install --upgrade pip
         pip install flake8 pytest
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-    - name: Run integration tests
+    - name: Set up PostgreSQL DB
+      run: |
+        psql -U postgres -h localhost -p ${{ job.services.postgres.ports['5432'] }} -c 'CREATE DATABASE queue_db
+                                                                                            WITH
+                                                                                            OWNER = postgres
+                                                                                            ENCODING = 'UTF8'
+                                                                                            TABLESPACE = pg_default
+                                                                                            CONNECTION LIMIT = -1
+                                                                                            IS_TEMPLATE = False;'
+        psql -U postgres -h localhost -p ${{ job.services.postgres.ports['5432'] }} -d queue_db -a -f DatabaseDumps/create_db_structure.sql
+    - name: Run Unit tests
+      run: |
+        pytest -m unit
+    - name: Run Integration tests
       run: |
         pytest -m integration
-    - name: Run system tests
-      env:
-        api_id: ${{ secrets.API_ID }}
-        api_hash: ${{ secrets.API_HASH }}
-        session_string: ${{ secrets.API_SESSION }}
-        chat_id: ${{ secrets.CHAT_ID }}
+    - name: Run tg-bot
+      run: |
+        python Src/queueBot.py &
+    - name: Run System tests
       run: |
         pytest -m system
+    - name: Stop tg-bot
+      run: |
+        pkill -f queueBot.py

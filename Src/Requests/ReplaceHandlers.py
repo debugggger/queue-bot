@@ -2,6 +2,7 @@ import datetime
 
 import telebot
 from telebot import types
+from utils import formReplaceRequest
 
 import utils
 from Entities import Subject
@@ -163,13 +164,11 @@ class ReplaceHandlers(BaseHandler):
                         rR = ReplaceRequest(curMember.id, replaceQueueMem.member.id, qId)
                         self.runtimeInfoManager.replaceRequests.append(rR)
                         self.runtimeInfoManager.timeoutManager.checkAndUpdate('replaceto', rR, datetime.datetime.now())
-                        self.bot.send_message(message.chat.id, '@' + chatRepMem.user.username
-                                              + ' вам предлагают поменяться в очереди\n'
-                                                ' от кого: ' + ' @' + chatCurMem.user.username + '\n'
-                                              + ' очередь: ' + str(
-                            QueueService.getQueueById(self.database, qId).subject.title) + '\n'
-                                              + ' ваше место: ' + str(replaceQueueMem.placeNumber) + '\n'
-                                              + ' предлагаемое место: ' + str(oldPlace))
+
+                        queue = QueueService.getQueueById(self.database, qId)
+                        replaceRequestText = formReplaceRequest(chatRepMem.user.username, chatCurMem.user.username, queue.subject.title, replaceQueueMem.placeNumber, oldPlace)
+
+                        self.bot.send_message(message.chat.id, replaceRequestText)
 
             self.replaceList.pop(message.from_user.id)
 

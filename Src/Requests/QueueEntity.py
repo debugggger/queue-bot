@@ -67,6 +67,14 @@ class QueueEntity(BaseHandler):
                 else:
                     QueueService.createQueue(self.database, subject.id)
                     self.bot.reply_to(message, "Создана очередь по " + subject.title, reply_markup=km.Remove)
+
+                    members = [member.tgNum for member in MemberService.getMembers(self.database)]
+                    for tg_mem_num in members:
+                        try:
+                            self.bot.send_message(tg_mem_num, "Там создана очередь по " + subject.title + "... Поспеши занять место!")
+                        except:
+                            print('-')
+
             else:
                 self.bot.reply_to(message, 'Такого предмета нет',
                                   reply_markup=km.Remove)
@@ -78,7 +86,7 @@ class QueueEntity(BaseHandler):
 
             subjectTitle = message.text.removeprefix('Очередь по ')
             if not SubjectService.isSubjectExist(self.database, subjectTitle):
-                self.bot.reply_to(message, 'Такого предмета не сущесвует', reply_markup=km.Remove)
+                self.bot.reply_to(message, 'Такого предмета не существует', reply_markup=km.Remove)
                 return
             subject: Subject = SubjectService.getSubjectByTitle(self.database, subjectTitle)
 
@@ -102,7 +110,7 @@ class QueueEntity(BaseHandler):
             if SubjectService.isSubjectExist(self.database, title):
 
                 if not self.runtimeInfoManager.timeoutManager.checkAndUpdate('show', title, datetime.datetime.now()):
-                    self.bot.reply_to(message, 'Очереди можно смотерть не чаще, чем раз в ' +
+                    self.bot.reply_to(message, 'Очереди можно смотреть не чаще, чем раз в ' +
                                       str(self.runtimeInfoManager.timeoutManager.getTimeout('show')) + ' секунд')
                     return
 

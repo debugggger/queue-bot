@@ -135,6 +135,12 @@ class QueueService:
                          QueueService.getMembersInQueue(database, result[0]))
 
     @staticmethod
+    def getQueueBySubjectTitle(database, title: str) -> Queue:
+        subject = SubjectService.getSubjectByTitle(database, title)
+        return QueueService.getQueueBySubjectId(database, subject.id)
+        
+
+    @staticmethod
     def getQueues(database) -> List[Queue]:
         queues : List[Queue] = []
         with database.connection.cursor() as cur:

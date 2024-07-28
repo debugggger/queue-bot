@@ -182,5 +182,5 @@ def test_QueueHandlers_queueTextHandler_delete_subjectNotExists(queueHandlers):
         mock_getSubjectByTitle.assert_not_called()
         mock_isQueueExist.assert_not_called()
         mock_createQueue.assert_not_called()
-        queueHandlers.bot.reply_to.assert_called_once_with(message, 'Такого предмета не сущесвует', reply_markup=km.Remove)
+        queueHandlers.bot.reply_to.assert_called_once_with(message, 'Такого предмета не существует', reply_markup=km.Remove)
         assert 'delete' not in queueHandlers.runtimeInfoManager.sendBarrier.data

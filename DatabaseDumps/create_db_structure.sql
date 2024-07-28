@@ -1,21 +1,3 @@
---
--- PostgreSQL database dump
---
-
--- Dumped from database version 15.1
--- Dumped by pg_dump version 15.1
-
-
---CREATE DATABASE queue_db_test
---    WITH
---    OWNER = queue_db_admin
---    ENCODING = 'UTF8'
---    LC_COLLATE = 'Russian_Russia.1251'
---    LC_CTYPE = 'Russian_Russia.1251'
---    TABLESPACE = pg_default
---    CONNECTION LIMIT = -1
---    IS_TEMPLATE = False;
-
 CREATE ROLE queue_db_admin WITH
   LOGIN
   NOSUPERUSER
@@ -201,62 +183,24 @@ ALTER TABLE ONLY public.subjects ALTER COLUMN id_subject SET DEFAULT nextval('pu
 
 
 --
--- Data for Name: members; Type: TABLE DATA; Schema: public; Owner: queue_db_admin
---
-
-INSERT INTO public.members (id_member, name, tg_num) VALUES (1, 'artas', '123456');
-INSERT INTO public.members (id_member, name, tg_num) VALUES (2, 'dmitry', '789101112');
-INSERT INTO public.members (id_member, name, tg_num) VALUES (3, 'artem', '1314151617');
-
-
---
--- Data for Name: subjects; Type: TABLE DATA; Schema: public; Owner: queue_db_admin
---
-
-INSERT INTO public.subjects (id_subject, title) VALUES (1, 'trkpo');
-INSERT INTO public.subjects (id_subject, title) VALUES (2, 'oprkppim');
-INSERT INTO public.subjects (id_subject, title) VALUES (3, 'pdpu');
-
-
---
--- Data for Name: queuesubjects; Type: TABLE DATA; Schema: public; Owner: queue_db_admin
---
-
-INSERT INTO public.queuesubjects (id_queue, subject_id, is_last) VALUES (1, 1, false);
-INSERT INTO public.queuesubjects (id_queue, subject_id, is_last) VALUES (2, 2, false);
-INSERT INTO public.queuesubjects (id_queue, subject_id, is_last) VALUES (3, 3, true);
-
-
---
--- Data for Name: queuemembers; Type: TABLE DATA; Schema: public; Owner: queue_db_admin
---
-
-INSERT INTO public.queuemembers (queue_id, member_id, entry_time, place_number, entry_type) VALUES (1, 1, '2024-02-18 23:19:16.334518', 1, 0);
-INSERT INTO public.queuemembers (queue_id, member_id, entry_time, place_number, entry_type) VALUES (1, 2, '2024-02-18 23:20:16.334518', 2, 0);
-INSERT INTO public.queuemembers (queue_id, member_id, entry_time, place_number, entry_type) VALUES (1, 3, '2024-02-18 23:21:16.334518', 3, 0);
-INSERT INTO public.queuemembers (queue_id, member_id, entry_time, place_number, entry_type) VALUES (2, 1, '2024-02-18 23:34:16.334518', 3, 2);
-INSERT INTO public.queuemembers (queue_id, member_id, entry_time, place_number, entry_type) VALUES (2, 3, '2024-02-18 23:38:16.334518', 2, 1);
-
-
---
 -- Name: members_id_member_seq; Type: SEQUENCE SET; Schema: public; Owner: queue_db_admin
 --
 
-SELECT pg_catalog.setval('public.members_id_member_seq', 4, true);
+SELECT pg_catalog.setval('public.members_id_member_seq', 1, true);
 
 
 --
 -- Name: queuesubjects_id_queue_seq; Type: SEQUENCE SET; Schema: public; Owner: queue_db_admin
 --
 
-SELECT pg_catalog.setval('public.queuesubjects_id_queue_seq', 4, true);
+SELECT pg_catalog.setval('public.queuesubjects_id_queue_seq', 1, true);
 
 
 --
 -- Name: subjects_id_subject_seq; Type: SEQUENCE SET; Schema: public; Owner: queue_db_admin
 --
 
-SELECT pg_catalog.setval('public.subjects_id_subject_seq', 4, true);
+SELECT pg_catalog.setval('public.subjects_id_subject_seq', 1, true);
 
 
 --
@@ -321,9 +265,3 @@ ALTER TABLE ONLY public.queuemembers
 
 ALTER TABLE ONLY public.queuesubjects
     ADD CONSTRAINT "QueueSubjects_Subjects_fk" FOREIGN KEY (subject_id) REFERENCES public.subjects(id_subject);
-
-
---
--- PostgreSQL database dump complete
---
-

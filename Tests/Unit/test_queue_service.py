@@ -4,11 +4,7 @@ from Services.QueueService import QueueService
 from Entities.Queue import *
 from dbTest import DatabaseTest
 
-
-@pytest.fixture(scope='function')
-def databaseTest():
-    return DatabaseTest()
-
+from test_unit_common import *
 
 @pytest.mark.unit
 def test_is_any_queue_exist(databaseTest):
@@ -60,6 +56,7 @@ def test_delete_queue_member(databaseTest):
 @pytest.mark.unit
 def test_create_queue(databaseTest):
     subject_id = 2
+    QueueService.deleteQueue(databaseTest, 2)
     QueueService.createQueue(databaseTest, subject_id)
     assert QueueService.isQueueExist(databaseTest, subject_id)
 
