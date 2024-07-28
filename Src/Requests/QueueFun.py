@@ -153,7 +153,7 @@ class QueueFun(BaseHandler):
             subjectTitle = message.text.removeprefix('Очередь по ')
 
             if not SubjectService.isSubjectExist(self.database, subjectTitle):
-                self.bot.reply_to(message, 'Такого предмета не сущесвует',
+                self.bot.reply_to(message, 'Такого предмета не существует',
                                   reply_markup=types.ReplyKeyboardRemove(selective=True))
                 return
 

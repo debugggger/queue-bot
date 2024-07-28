@@ -16,17 +16,36 @@ import TgUtil.KeyboardMarkups as km
 
 class SubjectHandlers(BaseHandler):
     def subjectCommand(self, message: telebot.types.Message) -> None:
-        self.bot.reply_to(message, 'Введи название нового предмета')
-        self.runtimeInfoManager.sendBarrier.add('subject', message.from_user.id)
+        chatMember: telebot.types.ChatMember = self.bot.get_chat_member(message.chat.id, message.from_user.id)
+        if chatMember.status not in ['creator', 'administrator']:
+            self.bot.reply_to(message, 'Эту команду могут выполнять только администраторы')
+            return
+
+        self.bot.reply_to(message, "Для продолжения нажми кнопку ввод", reply_markup=km.EnterCancel)
+        self.runtimeInfoManager.sendBarrier.add('subject1', message.from_user.id)
 
     def removesubjectCommand(self, message: telebot.types.Message) -> None:
-        markup = makeSubjectListMarkup(SubjectService.getSubjects(self.database))
+        chatMember: telebot.types.ChatMember = self.bot.get_chat_member(message.chat.id, message.from_user.id)
+        if chatMember.status not in ['creator', 'administrator']:
+            self.bot.reply_to(message, 'Эту команду могут выполнять только администраторы')
+            return
 
+        markup = makeSubjectListMarkup(SubjectService.getSubjects(self.database))
         self.bot.reply_to(message, 'Удалить предмет', reply_markup=markup)
         self.runtimeInfoManager.sendBarrier.add('removesubject', message.from_user.id)
 
     def subjectTextHandler(self, message: telebot.types.Message) -> None:
-        if self.runtimeInfoManager.sendBarrier.checkAndRemove('subject', message.from_user.id):
+        if self.runtimeInfoManager.sendBarrier.checkAndRemove('subject1', message.from_user.id):
+            if message.text == "Ввод":
+                self.bot.reply_to(message, 'Введи название предмета',
+                                  reply_markup=km.Remove)
+                self.runtimeInfoManager.sendBarrier.add('subject2', message.from_user.id)
+            else:
+                self.bot.reply_to(message, 'Ввод отображаемого названия отменен',
+                                  reply_markup=km.Remove)
+            return
+
+        if self.runtimeInfoManager.sendBarrier.checkAndRemove('subject2', message.from_user.id):
             title: str = removeBlank(message.text)
             
             if not checkSubjectTitle(title):
@@ -56,11 +75,8 @@ class SubjectHandlers(BaseHandler):
 
             subject = SubjectService.getSubjectByTitle(self.database, subjectTitle)
             if QueueService.isQueueExist(self.database, subject.id):
-                q = QueueService.getQueueBySubjectId(self.database, subject.id)
-                QueueService.deleteQueue(self.database, q.id)
-                SubjectService.removeSubject(self.database, subjectTitle)
-                self.bot.reply_to(message, 'Предмет удален. По этому предмету была очередь, она тоже удалена',
-                                    reply_markup=km.Remove)
+                self.bot.reply_to(message, 'По этому предмету есть очередь. Для начала удалите ее',
+                                  reply_markup=km.Remove)
                 return
 
             SubjectService.removeSubject(self.database, subjectTitle)
