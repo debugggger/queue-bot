@@ -9,7 +9,7 @@ from Services.MemberService import MemberService
 from Services.QueueService import QueueService
 from Services.SubjectService import SubjectService
 from utils import formQueueText, removeBlank, checkSubjectTitle
-import TgUtil.KeyboardMarkups as km
+import TgUtils.KeyboardMarkups as km
 
 
 class QueueEntity(BaseHandler):

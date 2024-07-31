@@ -1,17 +1,11 @@
-from typing import List
-
 import telebot
-from telebot import types
 
 from Requests.BaseHandler import BaseHandler
 from Services.QueueService import QueueService
 from Services.SubjectService import SubjectService
-from TgUtil.KeyboardMarkups import makeSubjectListMarkup
-from DbUtils.db import Database
-from Entities.Subject import Subject
-from Requests.RuntimeInfoManager import RuntimeInfoManager
+from TgUtils.KeyboardMarkups import makeSubjectListMarkup
 from utils import checkSubjectTitle, removeBlank
-import TgUtil.KeyboardMarkups as km
+import TgUtils.KeyboardMarkups as km
 
 
 class SubjectHandlers(BaseHandler):

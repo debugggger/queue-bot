@@ -1,5 +1,5 @@
 pyTelegramBotAPI
 python-dotenv
-psycopg2
+psycopg2-binary
 tgcrypto
 pyrogram

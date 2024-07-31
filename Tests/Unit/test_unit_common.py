@@ -1,6 +1,6 @@
 import pytest
 
-from DbUtils.db import Database
+from Src.DbUtils.db import Database
 
 
 @pytest.fixture(scope='session')

@@ -1,5 +1,4 @@
 import telebot
-from telebot import types
 
 from DbUtils.db import Database
 from Requests.RuntimeInfoManager import RuntimeInfoManager
