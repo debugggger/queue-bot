@@ -7,7 +7,7 @@ from Requests.BaseHandler import BaseHandler
 from Services.QueueService import QueueService
 from Services.SubjectService import SubjectService
 from TgUtil.KeyboardMarkups import makeSubjectListMarkup
-from db import Database
+from DbUtils.db import Database
 from Entities.Subject import Subject
 from Requests.RuntimeInfoManager import RuntimeInfoManager
 from utils import checkSubjectTitle, removeBlank

@@ -1,11 +1,11 @@
 import pytest
 
-from dbTest import DatabaseTest
+from DbUtils.db import Database
 
 
 @pytest.fixture(scope='session')
 def databaseTest():
-    return DatabaseTest()
+    return Database()
 
 def clearDatabase(database):
     with database.connection.cursor() as cur:

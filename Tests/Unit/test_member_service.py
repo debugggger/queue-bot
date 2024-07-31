@@ -2,7 +2,7 @@ import pytest
 from Entities.Member import Member
 from Services.MemberService import MemberService
 
-from dbTest import DatabaseTest
+from DbUtils.db import Database
 
 from test_unit_common import *
 

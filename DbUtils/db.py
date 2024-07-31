@@ -8,16 +8,15 @@ from Entities.Member import Member
 from Entities.Subject import Subject
 from Services.MemberService import MemberService
 
-
-class DatabaseTest:
+class Database:
     def __init__(self):
         load_dotenv()
         self.connection = psycopg2.connect(
-            host="127.0.0.1",
-            user="queue_db_admin",
-            password="raBOTyaga",
-            database="queue_db",
-            port=5432
+            host=os.getenv('host'),
+            user=os.getenv('user'),
+            password=os.getenv('password'),
+            database=os.getenv('db_name'),
+            port=os.getenv('port')
         )
         self.connection.autocommit = True
         with self.connection.cursor() as cur:
@@ -25,6 +24,5 @@ class DatabaseTest:
             print(f"server vers:  {cur.fetchone()}")
 
     def close(self):
-        self.connection.rollback()
         self.connection.close()
-        print("[INFO] Close connection with DB_TEST")
+        print("[INFO] Close connection with DB")

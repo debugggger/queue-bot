@@ -2,7 +2,7 @@ import telebot
 from telebot import types
 from Services.MemberService import MemberService
 
-from db import Database
+from DbUtils.db import Database
 from Requests.RuntimeInfoManager import RuntimeInfoManager
 from utils import checkMemberName, removeBlank
 from Requests.BaseHandler import BaseHandler

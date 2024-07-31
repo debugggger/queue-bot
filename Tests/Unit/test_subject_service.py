@@ -1,7 +1,7 @@
 import pytest
 from Entities.Subject import Subject
 from Services.SubjectService import SubjectService
-from dbTest import DatabaseTest
+from DbUtils.db import Database
 
 from test_unit_common import *
 
