@@ -7,7 +7,7 @@ from Services.MemberService import MemberService
 from Services.QueueService import QueueService
 from Services.SubjectService import SubjectService
 from Requests.BaseHandler import BaseHandler
-from db import Database
+from DbUtils.db import Database
 from utils import formQueueText
 
 def updateLastQueueText(bot: telebot.TeleBot, database, queueId: int, runtimeInfoManager: RuntimeInfoManager):

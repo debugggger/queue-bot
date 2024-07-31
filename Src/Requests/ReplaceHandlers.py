@@ -11,7 +11,7 @@ from Requests.BaseHandler import BaseHandler
 from Services.MemberService import MemberService
 from Services.QueueService import QueueService
 from Services.SubjectService import SubjectService
-from db import Database
+from DbUtils.db import Database
 from Requests.QueueFun import updateLastQueueText
 
 

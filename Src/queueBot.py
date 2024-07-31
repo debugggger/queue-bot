@@ -1,6 +1,5 @@
 from typing import Dict, Callable, List
 import os
-import time
 
 import telebot
 from telebot import types
@@ -10,7 +9,7 @@ from Requests.ReplaceHandlers import ReplaceHandlers
 from Services.MemberService import MemberService
 from Services.QueueService import QueueService
 
-from db import Database
+from DbUtils.db import Database
 
 from Requests.QueueEntity import QueueEntity
 from Requests.QueueFun import QueueFun, updateLastQueueText

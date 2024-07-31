@@ -7,7 +7,6 @@ import telebot
 from telebot import types
 from pyrogram import Client
 from dotenv import load_dotenv
-from dbTest import DatabaseTest
 
 load_dotenv()
 bot_id = int(os.getenv('bot_id'))
